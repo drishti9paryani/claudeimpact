@@ -42,7 +42,13 @@ const expected = (w) => {
   if (!r) return 0
   return num(r.standard_rate_inr) * (r.unit === 'per sqm' ? num(w.area_sqm) : 1)
 }
-const OVERBILL_RATIO = 1.4 // normal jobs vary 20-30% around the rate card (DATA_DICTIONARY)
+const SURFACE = new Set(['Cold mix patch', 'Hot mix patch', 'Mastic asphalt', 'Paver blocks relaid'])
+// Complaint "kind", read from category plus text (about 18% of categories are wrong).
+const kind = (c) => {
+  const s = `${c.category_reported} ${c.description} ${c.photo_description}`
+  return /pothole|khadd|gadd|crater|cave|paver|गड्ढ|खड्ड/i.test(s) ? 'road' : /manhole|chamber|gutter lid/i.test(s) ? 'manhole' : /water|flood|drain|nullah|paani/i.test(s) ? 'water' : 'other'
+}
+const OVERBILL_RATIO = 1.4// normal jobs vary 20-30% around the rate card (DATA_DICTIONARY)
 
 // Heavy-rain days (any station >= 64.5 mm, IMD "Heavy" or worse) for fairness context.
 const heavyDays = new Set(rain.filter((r) => num(r.rainfall_mm) >= 64.5).map((r) => r.date))
@@ -51,7 +57,8 @@ const heavyDays = new Set(rain.filter((r) => num(r.rainfall_mm) >= 64.5).map((r)
 const flags = []
 for (const w of wo) {
   const cost = num(w.cost_inr), exp = expected(w), road = ROAD[w.road_id]
-  if (road?.under_dlp === 'Y') flags.push({ type: 'warranty', wo: w.work_order_id, amount: cost, why: 'Road under defect liability period: the original road contractor should repair free, not a paid job' })
+  // Warranty covers the road surface only; pumping, desilting and pipeline digs are not the road builder's defect.
+  if (road?.under_dlp === 'Y' && SURFACE.has(w.repair_method)) flags.push({ type: 'warranty', wo: w.work_order_id, amount: cost, why: 'Road under defect liability period: the original road contractor should repair free, not a paid job' })
   if (/trench/i.test(w.engineer_remark)) flags.push({ type: 'utility', wo: w.work_order_id, amount: cost, why: 'Engineer remark says utility trench: recover from the utility that dug' })
   if (exp && cost / exp > OVERBILL_RATIO) flags.push({ type: 'overbill', wo: w.work_order_id, amount: Math.round(cost - exp), ratio: +(cost / exp).toFixed(2), why: `Billed ${(cost / exp).toFixed(2)}x the rate card` })
 }
@@ -126,8 +133,10 @@ for (const wd of wards) {
   const repeats = []
   for (const c of geo.filter((x) => x.status === 'Resolved' && x.resolved_at)) {
     const end = new Date(new Date(c.resolved_at).getTime() + 30 * 864e5).toISOString().slice(0, 16).replace('T', ' ')
-    const again = geo.find((n) => n.complaint_id !== c.complaint_id && n.received_at >= addDay(c.resolved_at) && n.received_at <= end && hav(num(c.lat), num(c.lon), num(n.lat), num(n.lon)) <= 50)
-    if (again) repeats.push({ closed: c.complaint_id, closedAt: c.resolved_at, again: again.complaint_id, againAt: again.received_at, locality: c.locality_text, text: again.description.slice(0, 160), days: +((new Date(again.received_at) - new Date(c.resolved_at)) / 864e5).toFixed(1) })
+    // Same kind of problem only, nearest match wins.
+    const k = kind(c), d = (n) => hav(num(c.lat), num(c.lon), num(n.lat), num(n.lon))
+    const again = geo.filter((n) => n.complaint_id !== c.complaint_id && kind(n) === k && n.received_at >= addDay(c.resolved_at) && n.received_at <= end && d(n) <= 50).sort((x, y) => d(x) - d(y))[0]
+    if (again) repeats.push({ closed: c.complaint_id, closedAt: c.resolved_at, again: again.complaint_id, againAt: again.received_at, kind: k, metres: Math.round(d(again)), locality: again.locality_text, text: again.description.slice(0, 160), days: +((new Date(again.received_at) - new Date(c.resolved_at)) / 864e5).toFixed(1) })
   }
 
   const contractors = {}
@@ -148,7 +157,7 @@ for (const wd of wards) {
     slaMissRate: +(jobs.filter((w) => w.sla_met === 'N').length / jobs.length).toFixed(3),
     shouldHavePaid: { total: Object.values(perWo).reduce((a, b) => a + b, 0), workOrders: Object.keys(perWo).length, byType },
     flags: wf.sort((a, b) => b.amount - a.amount),
-    repeats: { count: repeats.length, examples: repeats.sort((a, b) => a.days - b.days).slice(0, 5) },
+    repeats: { count: repeats.length, examples: repeats.sort((a, b) => a.days - b.days) },
     complaints: { total: wc.length, open: open.length, misfiled: misfiled.length, bounced: bounced.length, oldestOpen: open.slice(0, 5).map(pick), misfiledExamples: misfiled.slice(0, 5).map(pick), bouncedExamples: bounced.slice(0, 5).map(pick) },
     contractors: Object.values(contractors).map((c) => ({ name: c.name, jobs: c.jobs, reopenRate: +(c.reopened / c.jobs).toFixed(2), slaMissRate: +(c.slaMissed / c.jobs).toFixed(2), avgCostVsRate: c.ratioN ? +(c.costRatioSum / c.ratioN).toFixed(2) : null, heavyRainShare: +(c.heavyRainJobs / c.jobs).toFixed(2) })).sort((a, b) => b.jobs - a.jobs),
     nextRupee: roadsHere.slice(0, 8),

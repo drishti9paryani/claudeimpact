@@ -1,6 +1,6 @@
 // Merges pre-run agent output into public/ward-officer/agents.json.
 // Applies QC2 (fairness rewrites from Opus), then QC1 (evidence check, in code) as the final gate.
-// Usage: node scripts/ward-officer/merge-agents.mjs <workflow-output.json>
+// Usage: node scripts/ward-officer/merge-agents.mjs <workflow-output.json> [later-output.json ...]
 import { readFileSync, writeFileSync } from 'node:fs'
 import assert from 'node:assert'
 
@@ -41,11 +41,15 @@ function wardIndex(w) {
   return { known, numbers }
 }
 
-const raw = JSON.parse(readFileSync(process.argv[2], 'utf8'))
-const batches = typeof raw === 'string' ? JSON.parse(raw) : raw.result ?? raw
+// Several workflow outputs can be passed; a later file replaces earlier ones role by role
+// (e.g. a re-run of only the auditor and brief agents after the facts changed).
+const batches = process.argv.slice(2).flatMap((p) => {
+  const raw = JSON.parse(readFileSync(p, 'utf8'))
+  return typeof raw === 'string' ? JSON.parse(raw) : raw.result ?? raw
+})
 const facts = JSON.parse(readFileSync('public/ward-officer/facts.json', 'utf8'))
 const F = Object.fromEntries(facts.wards.map((w) => [w.code, w]))
-const out = {}, stats = { qc1Pass: 0, qc1Fail: 0, qc2Reworded: 0, qc2Context: 0, failures: [] }
+const out = {}
 
 for (const b of batches.filter(Boolean)) {
   const changes = b.qc2?.changes ?? []
@@ -59,11 +63,8 @@ for (const b of batches.filter(Boolean)) {
         const c = fix(role, w.code, key)
         const final = c ? { en: c.en, mr: c.mr } : text
         const r = qc1(final.en + ' ' + final.mr, known, numbers)
-        if (c) stats[c.verdict === 'reworded' ? 'qc2Reworded' : 'qc2Context']++
-        stats[r.pass ? 'qc1Pass' : 'qc1Fail']++
-        if (!r.pass) stats.failures.push({ ward: w.code, role, key, ...r })
         // Marathi units are swapped only after QC1, so the evidence check reads the agent's original figures.
-        return { ...final, mr: marathiUnits(final.mr), qc1: r.pass, qc2: c ? c.verdict : 'ok', qc2Reason: c?.reason }
+        return { ...final, mr: marathiUnits(final.mr), qc1: r.pass, qc1Bad: r.pass ? undefined : [...r.badIds, ...r.badRs], qc2: c ? c.verdict : 'ok', qc2Reason: c?.reason }
       }
       if (role === 'brief') {
         slot.brief = { morning: check('morning', w.morning), corporator: check('corporator', w.corporator) }
@@ -75,6 +76,21 @@ for (const b of batches.filter(Boolean)) {
         }
       }
     }
+  }
+}
+
+// Stats come from the final lines only, so replaced roles are not double-counted.
+const stats = { qc1Pass: 0, qc1Fail: 0, qc2Reworded: 0, qc2Context: 0, failures: [] }
+for (const [code, w] of Object.entries(out)) {
+  const lines = [
+    ...['triage', 'auditor', 'planner'].flatMap((r) => (w[r] ? [{ r, key: 'summary', l: w[r].summary }, ...w[r].items.map((i) => ({ r, key: i.key, l: i }))] : [])),
+    ...(w.brief ? [{ r: 'brief', key: 'morning', l: w.brief.morning }, { r: 'brief', key: 'corporator', l: w.brief.corporator }] : []),
+  ]
+  for (const { r, key, l } of lines) {
+    stats[l.qc1 ? 'qc1Pass' : 'qc1Fail']++
+    if (l.qc2 === 'reworded') stats.qc2Reworded++
+    if (l.qc2 === 'needs context') stats.qc2Context++
+    if (!l.qc1) stats.failures.push({ ward: code, role: r, key, bad: l.qc1Bad, en: l.en })
   }
 }
 writeFileSync('public/ward-officer/agents.json', JSON.stringify({ stats, wards: out }))
