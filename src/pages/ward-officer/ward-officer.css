@@ -60,3 +60,19 @@ ol.wd-list { list-style: decimal; padding-left: 20px; }
 .wd-top label { display: flex; align-items: center; gap: 8px; flex: 1 1 260px; min-width: 0; }
 .wd-top select { flex: 1; min-width: 0; }
 .wd-agent { white-space: pre-line; }
+
+/* Demo flow: sign-in, action buttons, progress. */
+.wd-login { max-width: 420px; display: flex; flex-direction: column; gap: 12px; }
+.wd-login label { display: flex; flex-direction: column; gap: 4px; font-size: 0.9rem; }
+.wd-login input, .wd-login select { font: inherit; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text-h); }
+.wd-who { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: flex-end; margin-bottom: 8px; font-size: 0.85rem; }
+.wd-who span { margin-right: auto; }
+.wd-who button, .wd-link { font: inherit; font-size: 0.8rem; background: none; border: 1px solid var(--border); border-radius: 999px; padding: 4px 10px; color: var(--text); cursor: pointer; min-height: 32px; }
+.wd-act { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 6px 0 4px; }
+.wd-act .wd-btn { font-size: 0.85rem; padding: 6px 10px; }
+.wd-btn.ghost { background: transparent; color: var(--accent); }
+.wd-cit { flex-basis: 100%; color: var(--accent); }
+.wd-actions li.wd-done { opacity: 0.85; }
+.wd-progress { margin: 4px 0 12px; }
+.wd-progress .bar { height: 8px; border-radius: 999px; background: var(--muted-bg); overflow: hidden; }
+.wd-progress .bar span { display: block; height: 100%; background: var(--accent); transition: width 0.3s; }

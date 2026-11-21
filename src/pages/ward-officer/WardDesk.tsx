@@ -73,8 +73,49 @@ const METHOD_MR: Record<string, string> = {
 }
 const method = (lang: Lang, m: string) => (lang === 'mr' ? METHOD_MR[m] ?? m : m)
 
+// What each of today's actions lets the officer do. Same order and conditions as todayActions().
+type ActKind = 'warranty' | 'bill' | 'repeat' | 'refile' | 'crew'
+type Act = { key: string; kind: ActKind; amount: number; citizen?: string }
+function actionMeta(w: Ward): Act[] {
+  const out: Act[] = []
+  const war = w.flags.find((f) => f.type === 'warranty')
+  if (war) out.push({ key: 'warranty:' + war.wo, kind: 'warranty', amount: war.amount })
+  const bill = w.flags.find((f) => f.type === 'overbill' || f.type === 'double')
+  if (bill) out.push({ key: 'bill:' + bill.wo, kind: 'bill', amount: bill.amount })
+  const rep = w.repeats.examples[0]
+  if (rep) out.push({ key: 'repeat:' + rep.again, kind: 'repeat', amount: 0, citizen: rep.again })
+  const lost = w.complaints.misfiledExamples[0]
+  if (lost) out.push({ key: 'refile:' + lost.id, kind: 'refile', amount: 0, citizen: lost.id })
+  const road = w.nextRupee[0]
+  if (road) out.push({ key: 'crew:' + road.road, kind: 'crew', amount: 0 })
+  return out.slice(0, 5)
+}
+const ACT = {
+  en: {
+    warranty: ['Send notice to original contractor', 'Notice sent: claim raised'],
+    bill: ['Hold payment, ask engineer why', 'Payment on hold'],
+    repeat: ['Schedule re-inspection', 'Re-inspection scheduled'],
+    refile: ['Refile as pothole', 'Refiled as pothole'],
+    crew: ['Assign crew', 'Crew assigned'],
+    ok: 'Checked: no issue', undo: 'Undo', citizen: 'Citizen sees on their complaint',
+    login: 'Sign in to Ward Desk', name: 'Your name', ward: 'Your ward', go: 'Sign in', demoNote: 'Demo sign-in: no password, nothing leaves this browser.',
+    signout: 'Sign out', reset: 'Reset demo', hello: 'Signed in as', progress: 'done today', held: 'claimed or on hold', citizens: 'citizens updated',
+  },
+  mr: {
+    warranty: ['मूळ कंत्राटदाराला नोटीस पाठवा', 'नोटीस पाठवली: दावा केला'],
+    bill: ['पेमेंट थांबवा, अभियंत्याला कारण विचारा', 'पेमेंट थांबवले'],
+    repeat: ['पुन्हा पाहणी ठरवा', 'पुन्हा पाहणी ठरली'],
+    refile: ['खड्डा म्हणून पुन्हा नोंदवा', 'खड्डा म्हणून नोंदवले'],
+    crew: ['पथक नेमा', 'पथक नेमले'],
+    ok: 'तपासले: अडचण नाही', undo: 'रद्द करा', citizen: 'नागरिकाला त्यांच्या तक्रारीवर दिसते',
+    login: 'Ward Desk मध्ये साइन इन करा', name: 'तुमचे नाव', ward: 'तुमचा वॉर्ड', go: 'साइन इन', demoNote: 'डेमो साइन-इन: पासवर्ड नाही, काहीही या ब्राउझरबाहेर जात नाही.',
+    signout: 'साइन आउट', reset: 'डेमो रीसेट', hello: 'साइन इन:', progress: 'आज पूर्ण', held: 'दावा केले / थांबवले', citizens: 'नागरिकांना कळवले',
+  },
+}
+
 const pct = (x: number) => `${Math.round(x * 100)}%`
 const base = import.meta.env.BASE_URL
+const confirmReset = () => true // demo: reset without a blocking dialog
 
 function Badges({ l, lang }: { l: Line; lang: Lang }) {
   const t = T[lang]
@@ -110,6 +151,10 @@ export default function WardDesk() {
   const [code, setCode] = useState(() => localStorage.getItem('wd-ward') ?? 'F/N')
   const [lang, setLang] = useState<Lang>(() => (localStorage.getItem('wd-lang') as Lang) ?? 'en')
   const [tab, setTab] = useState(0)
+  const [officer, setOfficer] = useState<{ name: string; ward: string } | null>(() => JSON.parse(localStorage.getItem('wd-officer') ?? 'null'))
+  const [loginName, setLoginName] = useState('')
+  const [done, setDone] = useState<Record<string, string>>(() => JSON.parse(localStorage.getItem('wd-done') ?? '{}'))
+  useEffect(() => localStorage.setItem('wd-done', JSON.stringify(done)), [done])
   const [copied, setCopied] = useState(false)
 
   useEffect(() => {
@@ -133,8 +178,36 @@ export default function WardDesk() {
     })
   }
 
+  const L = ACT[lang]
+  if (!officer) {
+    return (
+      <div className="wd wd-login">
+        <h2>{L.login}</h2>
+        <label>{L.name}<input value={loginName} onChange={(e) => setLoginName(e.target.value)} placeholder="e.g. A. Patil" /></label>
+        <label>{L.ward}
+          <select value={code} onChange={(e) => setCode(e.target.value)}>
+            {facts.wards.map((x) => <option key={x.code} value={x.code}>{x.code}: {x.name}</option>)}
+          </select>
+        </label>
+        <button className="wd-btn" onClick={() => { const o = { name: loginName.trim() || 'Ward Officer', ward: code }; localStorage.setItem('wd-officer', JSON.stringify(o)); setOfficer(o) }}>{L.go}</button>
+        <p className="wd-note">{L.demoNote}</p>
+      </div>
+    )
+  }
+  const acts = actionMeta(w)
+  const status = (a: Act) => done[w.code + '|' + a.key]
+  const setStatus = (a: Act, v?: string) => setDone((d) => { const n = { ...d }; if (v) n[w.code + '|' + a.key] = v; else delete n[w.code + '|' + a.key]; return n })
+  const doneCount = acts.filter(status).length
+  const claimed = acts.filter((a) => status(a) && status(a) !== 'ok').reduce((s2, a) => s2 + a.amount, 0)
+  const informed = acts.filter((a) => a.citizen && status(a) && status(a) !== 'ok').length
+
   return (
     <div className="wd" lang={lang === 'mr' ? 'mr' : 'en'}>
+      <div className="wd-who">
+        <span>{L.hello} <b>{officer.name}</b> · {w.code}</span>
+        <button onClick={() => { if (confirmReset()) setDone({}) }}>{L.reset}</button>
+        <button onClick={() => { localStorage.removeItem('wd-officer'); setOfficer(null) }}>{L.signout}</button>
+      </div>
       <div className="wd-top">
         <label>
           {t.pick}{' '}
@@ -173,8 +246,33 @@ export default function WardDesk() {
       {tab === 0 && (
         <section>
           <h2>{t.today}</h2>
+          <div className="wd-progress" aria-label="progress">
+            <div className="bar"><span style={{ width: `${acts.length ? (doneCount / acts.length) * 100 : 0}%` }} /></div>
+            <small><b>{doneCount}/{acts.length}</b> {L.progress} · <b>{inr(lang, claimed)}</b> {L.held} · <b>{informed}</b> {L.citizens}</small>
+          </div>
           <ol className="wd-actions">
-            {todayActions(w, lang).map((x) => <li key={x}>{x} <span className="wd-qc warn">{t.verify}</span></li>)}
+            {todayActions(w, lang).map((x, i) => {
+              const a = acts[i]
+              const st = a && status(a)
+              return (
+                <li key={x} className={st ? 'wd-done' : ''}>
+                  {x} {!st && <span className="wd-qc warn">{t.verify}</span>}
+                  {a && (
+                    <div className="wd-act">
+                      {!st && <>
+                        <button className="wd-btn" onClick={() => setStatus(a, 'act')}>{L[a.kind][0]}</button>
+                        <button className="wd-btn ghost" onClick={() => setStatus(a, 'ok')}>{L.ok}</button>
+                      </>}
+                      {st && <>
+                        <span className="wd-qc ok">✓ {st === 'ok' ? L.ok : L[a.kind][1]}</span>
+                        <button className="wd-link" onClick={() => setStatus(a)}>{L.undo}</button>
+                      </>}
+                      {st && st !== 'ok' && a.citizen && <small className="wd-cit">📱 {L.citizen} {a.citizen}: “{L[a.kind][1]}”</small>}
+                    </div>
+                  )}
+                </li>
+              )
+            })}
           </ol>
           <button className="wd-btn" onClick={() => copy(`${w.code} · ${t.today}\n` + todayActions(w, lang).map((x, i) => `${i + 1}. ${x}`).join('\n'))}>{copied ? t.copied : t.copyAll}</button>
           <h2>{t.morning}</h2>
