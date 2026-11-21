@@ -79,7 +79,7 @@ const method = (lang: Lang, m: string) => (lang === 'mr' ? METHOD_MR[m] ?? m : m
 
 // What each of today's actions lets the officer do. Same order and conditions as todayActions().
 type ActKind = 'warranty' | 'bill' | 'repeat' | 'refile' | 'crew'
-type Act = { key: string; kind: ActKind; amount: number; citizen?: string }
+type Act = { key: string; kind: ActKind; amount: number; citizen?: string; since?: string }
 function actionMeta(w: Ward): Act[] {
   const out: Act[] = []
   const war = w.flags.find((f) => f.type === 'warranty')
@@ -87,9 +87,9 @@ function actionMeta(w: Ward): Act[] {
   const bill = w.flags.find((f) => f.type === 'overbill' || f.type === 'double')
   if (bill) out.push({ key: 'bill:' + bill.wo, kind: 'bill', amount: bill.amount })
   const rep = w.repeats.examples[0]
-  if (rep) out.push({ key: 'repeat:' + rep.again, kind: 'repeat', amount: 0, citizen: rep.again })
+  if (rep) out.push({ key: 'repeat:' + rep.again, kind: 'repeat', amount: 0, citizen: rep.again, since: rep.againAt })
   const lost = w.complaints.misfiledExamples[0]
-  if (lost) out.push({ key: 'refile:' + lost.id, kind: 'refile', amount: 0, citizen: lost.id })
+  if (lost) out.push({ key: 'refile:' + lost.id, kind: 'refile', amount: 0, citizen: lost.id, since: lost.at })
   const road = w.nextRupee[0]
   if (road) out.push({ key: 'crew:' + road.road, kind: 'crew', amount: 0 })
   return out.slice(0, 5)
@@ -111,6 +111,8 @@ const ACT = {
     assign: 'Assign to sub-engineer', assigned: 'With sub-engineer', reported: 'Sub-engineer reported', fixed: 'fixed', notFixed: 'not fixed, needs a bigger repair',
     myJobs: 'My jobs from the ward officer', noJobs: 'Nothing assigned yet. The ward officer assigns field work from the Today page.',
     repFixed: 'Inspected: fixed', repNot: 'Inspected: not fixed', citySms: 'Your complaint was inspected and fixed',
+    due24: '24 h monsoon rule (High Court: 48 h)', waiting: (d: number) => `complaint waiting ${d} days`, why: 'Why? (saved in the log)',
+    logH: 'Decision log', logEmpty: 'No decisions yet.', logV: { approved: 'approved', ok: 'no issue', asg: 'assigned to sub-engineer', fixed: 'reported fixed', notfixed: 'reported not fixed', undo: 'undid' } as Record<string, string>,
     cityH: 'All wards', cityCols: ['Ward', 'Payments to check', 'Open complaints', 'Missed deadline', 'Failed in 30 days', 'Today decided'],
   },
   mr: {
@@ -129,6 +131,8 @@ const ACT = {
     assign: 'उप-अभियंत्याला नेमा', assigned: 'उप-अभियंत्याकडे', reported: 'उप-अभियंत्याचा अहवाल', fixed: 'दुरुस्त', notFixed: 'दुरुस्त नाही, मोठी दुरुस्ती हवी',
     myJobs: 'वॉर्ड अधिकाऱ्यांनी नेमलेली माझी कामे', noJobs: 'अजून काही नेमले नाही. वॉर्ड अधिकारी "आज" पानावरून फील्ड काम नेमतात.',
     repFixed: 'पाहणी: दुरुस्त', repNot: 'पाहणी: दुरुस्त नाही', citySms: 'तुमच्या तक्रारीची पाहणी झाली, दुरुस्त झाले',
+    due24: 'पावसाळी नियम 24 तास (उच्च न्यायालय: 48 तास)', waiting: (d: number) => `तक्रार ${d} दिवस प्रलंबित`, why: 'का? (नोंदीत जतन)',
+    logH: 'निर्णय नोंद', logEmpty: 'अजून निर्णय नाही.', logV: { approved: 'मंजूर', ok: 'अडचण नाही', asg: 'उप-अभियंत्याला नेमले', fixed: 'दुरुस्त कळवले', notfixed: 'दुरुस्त नाही कळवले', undo: 'रद्द केले' } as Record<string, string>,
     cityH: 'सर्व वॉर्ड', cityCols: ['वॉर्ड', 'तपासायची देयके', 'उघड्या तक्रारी', 'मुदत चुकली', '30 दिवसांत अपयशी', 'आज निर्णय'],
   },
 }
@@ -157,6 +161,10 @@ function messagesFor(a: Act, text: string, lang: Lang): Msg[] {
 type Role = 'officer' | 'engineer' | 'commissioner'
 const ROLES: Role[] = ['officer', 'engineer', 'commissioner']
 const FIELD: ActKind[] = ['repeat', 'crew'] // field work a sub-engineer can take
+const HAZARD: ActKind[] = ['repeat', 'refile', 'crew'] // a road hazard, so the 24 h / 48 h repair rules apply
+const AS_OF = Date.parse('2025-10-10T23:59') // dataset "today"
+type LogE = { at: string; who: string; role: Role; ward: string; key: string; v: string; reason?: string }
+const logVerb = (v: string) => (/^\d\d:\d\d$/.test(v) ? 'approved' : v.startsWith('rep:') ? v.split(':')[1] : v)
 const approved = (st?: string) => !!st && /^\d\d:\d\d$/.test(st)
 const now = () => new Date().toTimeString().slice(0, 5)
 const pct = (x: number) => `${Math.round(x * 100)}%`
@@ -201,6 +209,9 @@ export default function WardDesk() {
   const [loginName, setLoginName] = useState('')
   const [done, setDone] = useState<Record<string, string>>(() => JSON.parse(localStorage.getItem('wd-done') ?? '{}'))
   useEffect(() => localStorage.setItem('wd-done', JSON.stringify(done)), [done])
+  const [log, setLog] = useState<LogE[]>(() => JSON.parse(localStorage.getItem('wd-log') ?? '[]'))
+  useEffect(() => localStorage.setItem('wd-log', JSON.stringify(log)), [log])
+  const [why, setWhy] = useState<Record<string, string>>({})
 
   useEffect(() => {
     fetch(`${base}ward-officer/facts.json`).then((r) => r.json()).then(setFacts)
@@ -242,16 +253,21 @@ export default function WardDesk() {
   }
   const acts = actionMeta(w)
   const status = (a: Act) => done[w.code + '|' + a.key]
-  const setStatus = (a: Act, v?: string) => setDone((d) => { const n = { ...d }; if (v) n[w.code + '|' + a.key] = v; else delete n[w.code + '|' + a.key]; return n })
+  const role: Role = officer.role ?? 'officer'
+  // Every decision goes through here: it updates the card and appends to the log (undo adds an entry, never erases one).
+  const write = (k: string, v?: string, reason?: string) => {
+    setDone((d) => { const n = { ...d }; if (v) n[w.code + '|' + k] = v; else delete n[w.code + '|' + k]; return n })
+    setLog((l) => [...l, { at: now(), who: officer.name, role, ward: w.code, key: k, v: v ?? 'undo', reason: reason?.trim() || undefined }])
+  }
+  const setStatus = (a: Act, v?: string) => write(a.key, v, v ? why[w.code + '|' + a.key] : undefined)
   const claimed = acts.filter((a) => approved(status(a))).reduce((s2, a) => s2 + a.amount, 0)
   const informed = acts.filter((a) => a.citizen && (approved(status(a)) || status(a)?.startsWith('rep:fixed'))).length
-  const role: Role = officer.role ?? 'officer'
 
   const head = (
     <>
       <div className="wd-who">
         <span>{L.hello} <b>{officer.name || L.roles[role]}</b>{officer.name ? ` · ${L.roles[role]}` : ''}{role !== 'commissioner' ? ` · ${w.code}` : ''}</span>
-        <button onClick={() => { if (confirmReset()) setDone({}) }}>{L.reset}</button>
+        <button onClick={() => { if (confirmReset()) { setDone({}); setLog([]) } }}>{L.reset}</button>
         <button onClick={() => { localStorage.removeItem('wd-officer'); setOfficer(null) }}>{L.signout}</button>
       </div>
       <div className="wd-top">
@@ -372,6 +388,12 @@ export default function WardDesk() {
                 return (
                   <li key={x} className={st ? 'done' : ''}>
                     <p>{x}</p>
+                    {act && HAZARD.includes(act.kind) && !approved(st) && st !== 'ok' && !st?.startsWith('rep:fixed') && (
+                      <small className="wd-tag warn">⏱ {L.due24}{act.since ? ` · ${L.waiting(Math.floor((AS_OF - Date.parse(act.since.replace(' ', 'T'))) / 864e5))}` : ''}</small>
+                    )}
+                    {act && !st && (
+                      <input className="wd-why" aria-label={L.why} placeholder={L.why} value={why[w.code + '|' + act.key] ?? ''} onChange={(e) => setWhy((y) => ({ ...y, [w.code + '|' + act.key]: e.target.value }))} />
+                    )}
                     {act && !st && (
                       <div className="wd-act">
                         <button className="wd-btn" onClick={() => setStatus(act, now())}>{L.approve}</button>
@@ -399,6 +421,14 @@ export default function WardDesk() {
               </ul>
             )}
             {decided < acts.length && <p className="wd-note">{L.corpWait}</p>}
+            <h2>{L.logH}</h2>
+            {log.filter((e) => e.ward === w.code).length === 0 ? <p className="wd-note">{L.logEmpty}</p> : (
+              <ul className="wd-list wd-log">
+                {log.filter((e) => e.ward === w.code).slice().reverse().map((e, i) => (
+                  <li key={i}><small><b>{e.at}</b> · {e.who ? `${e.who} (${L.roles[e.role]})` : L.roles[e.role]} · {L.logV[logVerb(e.v)]} · {e.key.split(':').slice(1).join(':')}{e.reason ? ` · “${e.reason}”` : ''}</small></li>
+                ))}
+              </ul>
+            )}
             <p className="wd-note">{L.simNote}</p>
           </section>
         )
@@ -423,10 +453,10 @@ export default function WardDesk() {
         const c = w.citizens, C = L.cz
         const key = (k: string) => w.code + '|cz:' + k
         const st = (k: string) => done[key(k)]
-        const mark = (k: string, v?: string) => setDone((d) => { const n = { ...d }; if (v) n[key(k)] = v; else delete n[key(k)]; return n })
+        const mark = (k: string, v?: string) => write('cz:' + k, v)
         const Btn = ({ k, label, doneLabel }: { k: string; label: string; doneLabel: string }) => st(k)
           ? <div className="wd-act"><span className="wd-qc ok">✓ {doneLabel}</span><small className="wd-cit">📱 {C.sms} · {st(k)}</small><button className="wd-link" onClick={() => mark(k)}>{L.undo}</button></div>
-          : <div className="wd-act"><button className="wd-btn" onClick={() => mark(k, new Date().toTimeString().slice(0, 5))}>{label}</button></div>
+          : <div className="wd-act"><button className="wd-btn" onClick={() => mark(k, now())}>{label}</button></div>
         return (
           <section>
             <h2>{C.notFixedH} · {c.notFixedCount}</h2>

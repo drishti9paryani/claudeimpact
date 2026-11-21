@@ -93,3 +93,7 @@ ol.wd-list { list-style: decimal; padding-left: 20px; }
 .wd-progress { margin: 4px 0 12px; }
 .wd-progress .bar { height: 8px; border-radius: 999px; background: var(--muted-bg); overflow: hidden; }
 .wd-progress .bar span { display: block; height: 100%; background: var(--accent); transition: width 0.3s; }
+
+.wd-why { width: 100%; max-width: 420px; margin: 6px 0 0; padding: 6px 8px; font: inherit; font-size: 0.85rem; color: inherit; background: transparent; border: 1px solid rgba(127,127,127,0.35); border-radius: 6px; }
+.wd-tag.warn { display: block; width: fit-content; margin-top: 4px; }
+.wd-log li { padding: 6px 10px; }

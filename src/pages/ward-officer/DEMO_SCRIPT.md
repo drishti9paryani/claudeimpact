@@ -23,10 +23,13 @@ All data is the event's synthetic data. Messages are simulated (the screen says 
 **Say:** "This road is still under warranty. The original builder should fix it free, but we paid ₹1.2 lakh. Approve, and the notice goes to the contractor through the Roads Department."
 **Click:** **Approve & send** on card 2. "Billed 2.24 times the standard rate. Payment is on hold until the engineer explains."
 **Click:** **Assign to sub-engineer** on card 3. "This pothole was marked fixed and came back 3 days later. Field work goes to my sub-engineer, not into a WhatsApp forward."
-**Click:** **No issue** on card 4. "I'm still in charge. If something is fine, I say so."
+**Type** *Paver blocks, not a pothole* in card 4's **Why?** box, then **Click** **No issue**. "I'm still in charge. If something is fine, I say so, and I say why."
 **Click:** **Approve & send** on card 5.
+**Point at:** the ⏱ chip on the hazard cards. "Potholes have a 24-hour monsoon rule, and the High Court now says 48 hours, with ₹6 lakh compensation per death."
 **Point at:** the progress bar (5/5 done · ₹2.5 L claimed or on hold), then scroll to the **Outbox**.
 **Say:** "Every message went to the right person. Once all five were decided, **my corporator got the daily update automatically**. No copy-paste, no WhatsApp forwarding."
+
+**Point at:** the **Decision log** at the bottom. "Every decision is logged: who, when, what, and why. Undo adds a line; it never erases one."
 
 ## Page 3b · Sub-engineer reports back · 20 sec · `03b-sub-engineer.png`
 **Click:** **Sign out**, then **Sub-engineer**.
