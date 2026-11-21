@@ -7,7 +7,7 @@ Claude Impact Lab "Follow the Rupee" dataset (synthetic, not real BMC data).
 | Tab | What | Built by |
 |---|---|---|
 | Today | 5 actions (recover warranty money, check a bill, re-inspect a repeat spot, refile a lost complaint, send a crew), WhatsApp copy, morning brief, corporator reply | Code + Brief agent |
-| Who should have paid | Warranty (DLP) roads, bills over 1.4x the rate card, double bills (same road + method within 7 days, no complaint). Utility-trench remarks shown as "worth checking", not counted | Code + Auditor agent |
+| Who should have paid | Warranty (DLP) roads (the original road contractor owes the repair, not the contractor BMC paid), bills over 1.4x the rate card, double bills (same road + method within 7 days, no complaint). Utility-trench remarks shown as "worth checking", not counted | Code + Auditor agent |
 | Fixed or just closed? | Resolved complaint followed by a new one within 50 m, 1 to 30 days later | Code |
 | Lost complaints | Pothole photo filed under another category, bounced / closed pothole complaints, oldest open | Code + Triage agent |
 | Next rupee | Roads ranked by need (hospitals, flood spots, accidents, failed patches, bus route, age), lasting method + cost | Code + Planner agent |

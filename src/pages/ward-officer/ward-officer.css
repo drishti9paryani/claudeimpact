@@ -55,3 +55,8 @@ ol.wd-list { list-style: decimal; padding-left: 20px; }
 
 .wd-research li { margin-bottom: 6px; }
 .wd-research a { color: var(--accent); }
+
+/* Small screens: let the ward picker shrink, keep agent line breaks (bullets). */
+.wd-top label { display: flex; align-items: center; gap: 8px; flex: 1 1 260px; min-width: 0; }
+.wd-top select { flex: 1; min-width: 0; }
+.wd-agent { white-space: pre-line; }

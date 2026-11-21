@@ -10,7 +10,7 @@ export function rupees(text) {
   for (const m of text.matchAll(/(?:₹|Rs\.?\s?)\s?(-?[\d,]+(?:\.\d+)?)\s*(lakh|crore|cr|L)?/gi)) {
     const n = Number(m[1].replace(/,/g, ''))
     const unit = (m[2] || '').toLowerCase()
-    out.push(n * (unit === 'lakh' || unit === 'l' ? 1e5 : unit === 'crore' || unit === 'cr' ? 1e7 : 1))
+    out.push(Math.round(n * (unit === 'lakh' || unit === 'l' ? 1e5 : unit === 'crore' || unit === 'cr' ? 1e7 : 1)))
   }
   return out
 }

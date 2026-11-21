@@ -51,7 +51,7 @@ const heavyDays = new Set(rain.filter((r) => num(r.rainfall_mm) >= 64.5).map((r)
 const flags = []
 for (const w of wo) {
   const cost = num(w.cost_inr), exp = expected(w), road = ROAD[w.road_id]
-  if (road?.under_dlp === 'Y') flags.push({ type: 'warranty', wo: w.work_order_id, amount: cost, why: 'Road under defect liability period: original contractor should repair free' })
+  if (road?.under_dlp === 'Y') flags.push({ type: 'warranty', wo: w.work_order_id, amount: cost, why: 'Road under defect liability period: the original road contractor should repair free, not a paid job' })
   if (/trench/i.test(w.engineer_remark)) flags.push({ type: 'utility', wo: w.work_order_id, amount: cost, why: 'Engineer remark says utility trench: recover from the utility that dug' })
   if (exp && cost / exp > OVERBILL_RATIO) flags.push({ type: 'overbill', wo: w.work_order_id, amount: Math.round(cost - exp), ratio: +(cost / exp).toFixed(2), why: `Billed ${(cost / exp).toFixed(2)}x the rate card` })
 }

@@ -43,8 +43,8 @@ function todayActions(w: Ward, lang: Lang): string[] {
   const out: string[] = []
   const war = w.flags.find((f) => f.type === 'warranty')
   if (war) out.push(mr
-    ? `${war.roadName} (${war.road}) हमी कालावधीत आहे: ${war.contractor} कडून मोफत दुरुस्ती मागा. ${war.wo} चे ${inr(war.amount)} वसूल करा.`
-    : `${war.roadName} (${war.road}) is under warranty: ask ${war.contractor} to repair it free. Recover ${inr(war.amount)} paid on ${war.wo}.`)
+    ? `${war.roadName} (${war.road}) हमी कालावधीत आहे: मूळ रस्ता कंत्राटदाराने मोफत दुरुस्ती करायला हवी. ${war.wo} वर ${war.contractor} ला ${inr(war.amount)} दिले: हमी अटी तपासा व मूळ कंत्राटदाराकडून वसूल करा.`
+    : `${war.roadName} (${war.road}) is under warranty: the original road contractor should repair it free, yet ${war.wo} paid ${war.contractor} ${inr(war.amount)}. Check the warranty terms and claim from the original contractor.`)
   const bill = w.flags.find((f) => f.type === 'overbill' || f.type === 'double')
   if (bill) out.push(mr
     ? `${bill.wo} चे पेमेंट तपासा: ${bill.type === 'double' ? `${bill.twin} सारखेच काम 7 दिवसांत पुन्हा` : `दरपत्रकाच्या ${bill.ratio}x`}. ${inr(bill.amount)} वसूल करता येतील.`
