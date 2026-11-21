@@ -16,6 +16,10 @@ export function rupees(text) {
 }
 assert.deepStrictEqual(rupees('₹2.3 lakh and ₹1,200 and Rs 1.5 crore'), [230000, 1200, 15000000])
 
+// English money units left inside Marathi text -> Marathi words.
+export const marathiUnits = (s) => s.replace(/\b(lakhs?|lacs?|L)\b/g, 'लाख').replace(/\b(crores?|Cr)\b/gi, 'कोटी')
+assert.strictEqual(marathiUnits('₹105 lakh, ₹1.05 Cr, RD0077 Lane'), '₹105 लाख, ₹1.05 कोटी, RD0077 Lane')
+
 const ids = (text) => text.match(/\b(WO25-\d{5}|BMC25-\d{6}|RD\d{4})\b/g) ?? []
 
 // QC1: every id must belong to this ward's facts; every ₹ figure must be within 5% of a computed number.
@@ -58,7 +62,8 @@ for (const b of batches.filter(Boolean)) {
         if (c) stats[c.verdict === 'reworded' ? 'qc2Reworded' : 'qc2Context']++
         stats[r.pass ? 'qc1Pass' : 'qc1Fail']++
         if (!r.pass) stats.failures.push({ ward: w.code, role, key, ...r })
-        return { ...final, qc1: r.pass, qc2: c ? c.verdict : 'ok', qc2Reason: c?.reason }
+        // Marathi units are swapped only after QC1, so the evidence check reads the agent's original figures.
+        return { ...final, mr: marathiUnits(final.mr), qc1: r.pass, qc2: c ? c.verdict : 'ok', qc2Reason: c?.reason }
       }
       if (role === 'brief') {
         slot.brief = { morning: check('morning', w.morning), corporator: check('corporator', w.corporator) }

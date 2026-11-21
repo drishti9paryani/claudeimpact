@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import type { AgentBlock, Agents, Facts, Lang, Line, Ward } from './types'
+import type { AgentBlock, Agents, Facts, Flag, Lang, Line, Ward } from './types'
 import { day, designRules, devilsAdvocate, disagreements, pains, portalGaps, toolLessons } from './research'
 import './ward-officer.css'
 
@@ -35,20 +35,20 @@ const T = {
 }
 
 // Indian money format: ₹4.2 L, ₹1.3 Cr.
-const inr = (n: number) =>
-  Math.abs(n) >= 1e7 ? `₹${(n / 1e7).toFixed(2)} Cr` : Math.abs(n) >= 1e5 ? `₹${(n / 1e5).toFixed(1)} L` : `₹${Math.round(n).toLocaleString('en-IN')}`
+const inr = (lang: Lang, n: number) =>
+  Math.abs(n) >= 1e7 ? `₹${(n / 1e7).toFixed(2)} ${lang === "mr" ? "कोटी" : "Cr"}` : Math.abs(n) >= 1e5 ? `₹${(n / 1e5).toFixed(1)} ${lang === "mr" ? "लाख" : "L"}` : `₹${Math.round(n).toLocaleString('en-IN')}`
 // Today's 5 actions: built in code from the facts, so every ID and ₹ figure is real.
 function todayActions(w: Ward, lang: Lang): string[] {
   const mr = lang === 'mr'
   const out: string[] = []
   const war = w.flags.find((f) => f.type === 'warranty')
   if (war) out.push(mr
-    ? `${war.roadName} (${war.road}) हमी कालावधीत आहे: मूळ रस्ता कंत्राटदाराने मोफत दुरुस्ती करायला हवी. ${war.wo} वर ${war.contractor} ला ${inr(war.amount)} दिले: हमी अटी तपासा व मूळ कंत्राटदाराकडून वसूल करा.`
-    : `${war.roadName} (${war.road}) is under warranty: the original road contractor should repair it free, yet ${war.wo} paid ${war.contractor} ${inr(war.amount)}. Check the warranty terms and claim from the original contractor.`)
+    ? `${war.roadName} (${war.road}) हमी कालावधीत आहे: मूळ रस्ता कंत्राटदाराने मोफत दुरुस्ती करायला हवी. ${war.wo} वर ${war.contractor} ला ${inr(lang, war.amount)} दिले: हमी अटी तपासा व मूळ कंत्राटदाराकडून वसूल करा.`
+    : `${war.roadName} (${war.road}) is under warranty: the original road contractor should repair it free, yet ${war.wo} paid ${war.contractor} ${inr(lang, war.amount)}. Check the warranty terms and claim from the original contractor.`)
   const bill = w.flags.find((f) => f.type === 'overbill' || f.type === 'double')
   if (bill) out.push(mr
-    ? `${bill.wo} चे पेमेंट तपासा: ${bill.type === 'double' ? `${bill.twin} सारखेच काम 7 दिवसांत पुन्हा` : `दरपत्रकाच्या ${bill.ratio}x`}. ${inr(bill.amount)} वसूल करता येतील.`
-    : `Check payment on ${bill.wo}: ${bill.type === 'double' ? `same job as ${bill.twin} within 7 days` : `billed ${bill.ratio}x the rate card`}. ${inr(bill.amount)} to recover.`)
+    ? `${bill.wo} चे पेमेंट तपासा: ${bill.type === 'double' ? `${bill.twin} सारखेच काम 7 दिवसांत पुन्हा` : `दरपत्रकाच्या ${bill.ratio}x`}. ${inr(lang, bill.amount)} वसूल करता येतील.`
+    : `Check payment on ${bill.wo}: ${bill.type === 'double' ? `same job as ${bill.twin} within 7 days` : `billed ${bill.ratio}x the rate card`}. ${inr(lang, bill.amount)} to recover.`)
   const rep = w.repeats.examples[0]
   if (rep) out.push(mr
     ? `${rep.locality} येथे पुन्हा पाहणी करा: ${rep.closed} बंद झाल्यावर ${rep.days} दिवसांत त्याच जागी ${rep.again} आली.`
@@ -59,8 +59,8 @@ function todayActions(w: Ward, lang: Lang): string[] {
     : `Refile ${lost.id} as a pothole (photo shows one, filed as "${lost.category}").`)
   const road = w.nextRupee[0]
   if (road) out.push(mr
-    ? `पथक ${road.name} (${road.road}) वर पाठवा: ${road.method}, अंदाजे ${road.underWarranty ? '₹0' : inr(road.estCost)}.`
-    : `Send a crew to ${road.name} (${road.road}): ${road.method}, about ${road.underWarranty ? '₹0' : inr(road.estCost)}.`)
+    ? `पथक ${road.name} (${road.road}) वर पाठवा: ${road.method}, अंदाजे ${road.underWarranty ? '₹0' : inr(lang, road.estCost)}.`
+    : `Send a crew to ${road.name} (${road.road}): ${road.method}, about ${road.underWarranty ? '₹0' : inr(lang, road.estCost)}.`)
   return out.slice(0, 5)
 }
 
@@ -90,7 +90,14 @@ function AgentText({ l, lang }: { l?: Line; lang: Lang }) {
   )
 }
 
-const lineFor = (b: AgentBlock | undefined, key: string) => b?.items.find((i) => i.key === key && i.qc1)
+// One card per work order: a job can be flagged several ways (e.g. warranty road and over the rate card).
+function byWorkOrder(flags: Flag[]): Flag[][] {
+  const m = new Map<string, Flag[]>()
+  for (const f of flags) m.set(f.wo, [...(m.get(f.wo) ?? []), f])
+  return [...m.values()]
+}
+
+const lineFor =(b: AgentBlock | undefined, key: string) => b?.items.find((i) => i.key === key && i.qc1)
 
 export default function WardDesk() {
   const [facts, setFacts] = useState<Facts | null>(null)
@@ -141,9 +148,9 @@ export default function WardDesk() {
       <p className="wd-note">{t.synthetic} · {t.asOf}</p>
 
       <div className="wd-stats">
-        <div><span>{t.budget}</span><b>{inr(w.budget)}</b></div>
-        <div className={left < 0 ? 'bad' : ''}><span>{t.spent}</span><b>{inr(w.spent)}</b><small>{pct(w.spent / w.budget)}</small></div>
-        <div className="hl"><span>{t.shp}</span><b>{inr(w.shouldHavePaid.total)}</b><small>{w.shouldHavePaid.workOrders} WO</small></div>
+        <div><span>{t.budget}</span><b>{inr(lang, w.budget)}</b></div>
+        <div className={left < 0 ? 'bad' : ''}><span>{t.spent}</span><b>{inr(lang, w.spent)}</b><small>{pct(w.spent / w.budget)}</small></div>
+        <div className="hl"><span>{t.shp}</span><b>{inr(lang, w.shouldHavePaid.total)}</b><small>{w.shouldHavePaid.workOrders} WO</small></div>
         <div><span>{t.crews}</span><b>{w.crews}</b></div>
         <div className={w.lowLying >= 0.75 ? 'bad' : ''}><span>{t.flood}</span><b>{w.lowLying}</b></div>
       </div>
@@ -195,22 +202,28 @@ export default function WardDesk() {
           <div className="wd-chips">
             {Object.entries(w.shouldHavePaid.byType).map(([k, v]) => (
               <span key={k} className={k === 'utility' ? 'muted' : ''}>
-                {t.types[k as keyof typeof t.types]}: {v.count} · {inr(v.amount)}{k === 'utility' ? ` (${t.worth})` : ''}
+                {t.types[k as keyof typeof t.types]}: {v.count} · {inr(lang, v.amount)}{k === 'utility' ? ` (${t.worth})` : ''}
               </span>
             ))}
           </div>
           <ul className="wd-list">
-            {w.flags.slice(0, 25).map((f) => (
-              <li key={f.type + f.wo}>
-                <div className="wd-row">
-                  <b>{f.wo}</b>
-                  <span className={`wd-tag ${f.type}`}>{t.types[f.type]}</span>
-                  <span className="wd-amt">{inr(f.amount)}</span>
-                </div>
-                <small>{f.roadName} ({f.road}) · {f.contractor} · {f.method} · {f.date}{f.heavyRainWeek ? ' · 🌧' : ''}</small>
-                <AgentText l={lineFor(a?.auditor, f.wo)} lang={lang} />
-              </li>
-            ))}
+            {byWorkOrder(w.flags).slice(0, 25).map((fs) => {
+              const f = fs[0]
+              // Headline amount ignores the utility "worth checking" flag unless it is the only one.
+              const counted = fs.filter((x) => x.type !== 'utility')
+              const amount = Math.max(...(counted.length ? counted : fs).map((x) => x.amount))
+              return (
+                <li key={f.wo}>
+                  <div className="wd-row">
+                    <b>{f.wo}</b>
+                    {fs.map((x) => <span key={x.type} className={`wd-tag ${x.type}`}>{t.types[x.type]} · {inr(lang, x.amount)}</span>)}
+                    <span className="wd-amt">{inr(lang, amount)}</span>
+                  </div>
+                  <small>{f.roadName} ({f.road}) · {f.contractor} · {f.method} · {f.date}{f.heavyRainWeek ? ' · 🌧' : ''}</small>
+                  <AgentText l={lineFor(a?.auditor, f.wo)} lang={lang} />
+                </li>
+              )
+            })}
           </ul>
         </section>
       )}
@@ -257,12 +270,12 @@ export default function WardDesk() {
                 <div className="wd-row">
                   <b>{r.name} #{r.segment}</b>
                   <span className="wd-tag">{r.road}</span>
-                  <span className="wd-amt">{r.underWarranty ? '₹0' : inr(r.estCost)}</span>
+                  <span className="wd-amt">{r.underWarranty ? '₹0' : inr(lang, r.estCost)}</span>
                 </div>
                 <small>
                   {r.method} · {r.reopens}× reopened · {r.accidents} accidents{r.fatal ? ` (${r.fatal} fatal)` : ''}
                   {r.hospitals.length ? ` · 🏥 ${r.hospitals.join(', ')}` : ''}{r.floodSpots.length ? ` · 🌊 ${r.floodSpots.join(', ')}` : ''}
-                  {r.busRoute ? ' · 🚌' : ''} · {inr(r.spent)} spent so far
+                  {r.busRoute ? ' · 🚌' : ''} · {inr(lang, r.spent)} spent so far
                 </small>
                 <AgentText l={lineFor(a?.planner, r.road)} lang={lang} />
               </li>
