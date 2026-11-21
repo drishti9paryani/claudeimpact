@@ -16,7 +16,7 @@ const T = {
     loading: 'Loading…', noAgent: 'Agent notes not generated yet. Numbers below come straight from the data.',
     misfiled: 'Photo shows a pothole, filed as something else', bounced: 'Pothole complaints bounced or closed', open: 'Oldest still open',
     placed: (n: number, g: number) => `${n} complaints had no ward. Placed here from the typed locality (incl. Marathi spellings)${g ? `, ${g} more from GPS` : ''}.`,
-    placedH: 'Had no ward in the system, placed here, still open', tide: 'big tides block drains here', tideReopen: (n: number) => `${n} patch failed after a big-tide day`,
+    placedH: 'Had no ward in the system, placed here (open ones listed)', tide: 'big tides block drains here', tideReopen: (n: number) => `${n} patch failed after a big-tide day`,
     contractorNote: 'Read with context: heavy-rain share and flood risk change what a fair reopen rate looks like.',
     cols: ['Contractor', 'Jobs', 'Failed in 30 days', 'Missed deadline', 'Cost vs rate', 'Heavy-rain jobs'],
   },
@@ -32,7 +32,7 @@ const T = {
     loading: 'लोड होत आहे…', noAgent: 'एजंटच्या नोंदी अजून तयार नाहीत. खालील आकडे थेट डेटामधून आहेत.',
     misfiled: 'फोटोत खड्डा, पण दुसऱ्या प्रकारात नोंद', bounced: 'परत पाठवलेल्या / बंद केलेल्या खड्डा तक्रारी', open: 'सर्वात जुन्या उघड्या तक्रारी',
     placed: (n: number, g: number) => `${n} तक्रारींना वॉर्ड नव्हता. लिहिलेल्या ठिकाणावरून (मराठी नावांसह) इथे जोडल्या${g ? `, आणखी ${g} GPS वरून` : ''}.`,
-    placedH: 'प्रणालीत वॉर्ड नव्हता, इथे जोडल्या, अजून उघड्या', tide: 'मोठ्या भरतीत इथले नाले तुंबतात', tideReopen: (n: number) => `${n} दुरुस्ती मोठ्या भरतीनंतर उखडली`,
+    placedH: 'प्रणालीत वॉर्ड नव्हता, इथे जोडल्या (उघड्या खाली)', tide: 'मोठ्या भरतीत इथले नाले तुंबतात', tideReopen: (n: number) => `${n} दुरुस्ती मोठ्या भरतीनंतर उखडली`,
     contractorNote: 'संदर्भासह वाचा: मुसळधार पावसातील कामे आणि पूर धोका यामुळे योग्य अपयश दर बदलतो.',
     cols: ['कंत्राटदार', 'कामे', '30 दिवसांत अपयशी', 'मुदत चुकली', 'दराच्या तुलनेत खर्च', 'मुसळधार पावसातील कामे'],
   },
@@ -274,7 +274,7 @@ export default function WardDesk() {
       <div className="wd-who">
         <span>{L.hello} <b>{officer.name || L.roles[role]}</b>{officer.name ? ` · ${L.roles[role]}` : ''}{role !== 'commissioner' ? ` · ${w.code}` : ''}</span>
         <button onClick={() => { if (confirmReset()) { setDone({}); setLog([]); setEod({}) } }}>{L.reset}</button>
-        <button onClick={() => { localStorage.removeItem('wd-officer'); setOfficer(null) }}>{L.signout}</button>
+        <button onClick={() => { localStorage.removeItem('wd-officer'); setOfficer(null); setLoginName('') }}>{L.signout}</button>
       </div>
       <div className="wd-top">
         <b className="wd-wardname">{role === 'commissioner' ? L.cityH : `${w.code}: ${w.name}`}</b>

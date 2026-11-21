@@ -34,7 +34,7 @@ All data is the event's synthetic data. Messages are simulated (the screen says 
 ## Page 3b · Sub-engineer reports back · 20 sec · `03b-sub-engineer.png`
 **Click:** **Sign out**, then **Sub-engineer**.
 **Say:** "This is my sub-engineer's account. They see only the jobs I gave them." **Click** **Inspected: fixed**.
-**Click:** **Sign out**, then **Ward Officer (AMC)**.
+**Click:** **Sign out**, type **A. Patil** again, then **Ward Officer (AMC)**.
 **Point at:** card 3 ("Sub-engineer reported: fixed") and the Outbox SMS. "The report comes straight back to me, and **the citizen gets an SMS** that it's fixed."
 
 ## Page 3c · Close the day · 15 sec · `03c-close-the-day.png`
@@ -57,7 +57,7 @@ All data is the event's synthetic data. Messages are simulated (the screen says 
 **Say:** "Citizens' number one complaint is that 'closed' doesn't mean 'fixed'. We check the data itself: 19 spots where a complaint marked resolved came back within 30 days, at the same place, for the same problem."
 
 ## Page 7 · Lost complaints · 10 sec · `07-lost-complaints.png`
-**Say:** "Complaints the system lost: the photo shows a pothole but it was filed as something else, or it was bounced as a duplicate. And 19 complaints came in with no ward at all: we placed them from the typed locality, even Marathi spellings like शीव for Sion."
+**Say:** "Complaints the system lost: the photo shows a pothole but it was filed as something else, or it was bounced as a duplicate. And 19 complaints came in with no ward at all: we placed them from the typed locality, including Marathi spellings."
 
 ## Page 8 · Next rupee · 15 sec · `08-next-rupee.png`
 **Say:** "Where my next rupee goes: ranked by need, not by noise. Hospital ambulance roads, flood spots, accidents, patches that already failed, and flood spots that big tides block (🌕). Two of these roads should cost us ₹0, because they're under warranty."
