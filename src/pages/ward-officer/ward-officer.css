@@ -73,6 +73,18 @@ ol.wd-list { list-style: decimal; padding-left: 20px; }
 .wd-btn.ghost { background: transparent; color: var(--accent); }
 .wd-cit { flex-basis: 100%; color: var(--accent); }
 .wd-actions li.wd-done { opacity: 0.85; }
+.wd-wardname { color: var(--text-h); }
+.wd-summary { margin: 8px 0 12px; }
+.wd-steps { list-style: none; display: flex; flex-wrap: wrap; gap: 6px; padding: 0; margin: 12px 0 8px; }
+.wd-steps li { font-size: 0.85rem; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--border); }
+.wd-steps li.on { border-color: var(--accent); color: var(--accent); }
+.wd-steps li.done { background: var(--accent-bg); color: var(--accent); border-color: var(--accent); }
+.wd-cards { list-style: none; padding: 0; margin: 0 0 16px; counter-reset: c; }
+.wd-cards li { counter-increment: c; position: relative; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px 12px 44px; margin-bottom: 10px; }
+.wd-cards li::before { content: counter(c); position: absolute; left: 14px; top: 12px; width: 22px; height: 22px; border-radius: 50%; background: var(--accent); color: var(--bg); font-size: 0.8rem; font-weight: 700; display: grid; place-items: center; }
+.wd-cards li.done { border-color: var(--accent); opacity: 0.8; }
+.wd-cards li.done::before { content: '✓'; }
+.wd-cards p { margin: 0; color: var(--text-h); }
 .wd-progress { margin: 4px 0 12px; }
 .wd-progress .bar { height: 8px; border-radius: 999px; background: var(--muted-bg); overflow: hidden; }
 .wd-progress .bar span { display: block; height: 100%; background: var(--accent); transition: width 0.3s; }

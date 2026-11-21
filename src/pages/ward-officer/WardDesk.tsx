@@ -99,6 +99,7 @@ const ACT = {
     crew: ['Assign crew', 'Crew assigned'],
     ok: 'Checked: no issue', undo: 'Undo', citizen: 'Citizen sees on their complaint',
     login: 'Sign in to Ward Desk', name: 'Your name', ward: 'Your ward', go: 'Sign in', demoNote: 'Demo sign-in: no password, nothing leaves this browser.',
+    approve: 'Approve & send', dismiss: 'No issue', steps: ['Review', 'Decide', 'Sent automatically'], outbox: 'Outbox', pending: 'to decide', sentTo: 'Sent to', corpTo: 'Corporator(s), ward', corpSubj: 'Daily ward update', corpWait: 'Corporator update sends itself when all actions are decided', simNote: 'Demo: messages are simulated. In use they would go through the BMC email/SMS gateway.', empty: 'Nothing sent yet. Approve an action above.', summary: 'This morning',
     signout: 'Sign out', reset: 'Reset demo', hello: 'Signed in as', progress: 'done today', held: 'claimed or on hold', citizens: 'citizens updated',
   },
   mr: {
@@ -109,8 +110,30 @@ const ACT = {
     crew: ['पथक नेमा', 'पथक नेमले'],
     ok: 'तपासले: अडचण नाही', undo: 'रद्द करा', citizen: 'नागरिकाला त्यांच्या तक्रारीवर दिसते',
     login: 'Ward Desk मध्ये साइन इन करा', name: 'तुमचे नाव', ward: 'तुमचा वॉर्ड', go: 'साइन इन', demoNote: 'डेमो साइन-इन: पासवर्ड नाही, काहीही या ब्राउझरबाहेर जात नाही.',
+    approve: 'मंजूर करा व पाठवा', dismiss: 'अडचण नाही', steps: ['पाहा', 'निर्णय', 'आपोआप पाठवले'], outbox: 'पाठवलेले', pending: 'निर्णय बाकी', sentTo: 'पाठवले:', corpTo: 'नगरसेवक, वॉर्ड', corpSubj: 'दैनिक वॉर्ड अहवाल', corpWait: 'सर्व कामांवर निर्णय झाल्यावर नगरसेवकांना अहवाल आपोआप जाईल', simNote: 'डेमो: संदेश प्रत्यक्ष पाठवले जात नाहीत. वापरात ते BMC ईमेल/SMS प्रणालीतून जातील.', empty: 'अजून काही पाठवले नाही. वरील काम मंजूर करा.', summary: 'आज सकाळी',
     signout: 'साइन आउट', reset: 'डेमो रीसेट', hello: 'साइन इन:', progress: 'आज पूर्ण', held: 'दावा केले / थांबवले', citizens: 'नागरिकांना कळवले',
   },
+}
+
+// Messages an approval sends automatically. Demo: simulated, nothing leaves the browser.
+type Msg = { ch: 'email' | 'sms'; to: string; subject: string }
+function messagesFor(a: Act, text: string, lang: Lang): Msg[] {
+  const mr = lang === 'mr'
+  const ref = a.key.split(':')[1]
+  const M: Record<ActKind, Msg[]> = {
+    warranty: [{ ch: 'email', to: mr ? 'मूळ रस्ता कंत्राटदार (रस्ते विभागामार्फत)' : 'Original road contractor (via Roads Dept)', subject: (mr ? 'दोष दायित्व नोटीस: ' : 'Defect-liability notice: ') + ref }],
+    bill: [{ ch: 'email', to: mr ? 'उप-अभियंता + लेखा विभाग' : 'Sub-engineer + Accounts', subject: (mr ? 'पेमेंट रोखले, कारण कळवा: ' : 'Payment on hold, explain rate: ') + ref }],
+    repeat: [
+      { ch: 'email', to: mr ? 'उप-अभियंता' : 'Sub-engineer', subject: (mr ? 'पुन्हा पाहणी आदेश: ' : 'Re-inspection order: ') + ref },
+      { ch: 'sms', to: (mr ? 'नागरिक, तक्रार ' : 'Citizen, complaint ') + ref, subject: mr ? 'तुमच्या तक्रारीची पुन्हा पाहणी ठरली आहे' : 'Your complaint is scheduled for re-inspection' },
+    ],
+    refile: [
+      { ch: 'email', to: mr ? 'तक्रार कक्ष (MARG)' : 'Complaint desk (MARG)', subject: (mr ? 'खड्डा म्हणून पुन्हा वर्गीकरण: ' : 'Recategorise as pothole: ') + ref },
+      { ch: 'sms', to: (mr ? 'नागरिक, तक्रार ' : 'Citizen, complaint ') + ref, subject: mr ? 'तुमची तक्रार खड्डा म्हणून नोंदवली, पथक नेमले जाईल' : 'Your complaint is now logged as a pothole' },
+    ],
+    crew: [{ ch: 'email', to: mr ? 'देखभाल पथक प्रमुख' : 'Maintenance crew lead', subject: (mr ? 'काम आदेश: ' : 'Work order: ') + text.split(':')[0].replace(/^Send a crew to |^पथक /, '') }],
+  }
+  return M[a.kind]
 }
 
 const pct = (x: number) => `${Math.round(x * 100)}%`
@@ -155,7 +178,6 @@ export default function WardDesk() {
   const [loginName, setLoginName] = useState('')
   const [done, setDone] = useState<Record<string, string>>(() => JSON.parse(localStorage.getItem('wd-done') ?? '{}'))
   useEffect(() => localStorage.setItem('wd-done', JSON.stringify(done)), [done])
-  const [copied, setCopied] = useState(false)
 
   useEffect(() => {
     fetch(`${base}ward-officer/facts.json`).then((r) => r.json()).then(setFacts)
@@ -171,13 +193,6 @@ export default function WardDesk() {
   const held = a ? [a.triage, a.auditor, a.planner].flatMap((b) => (b ? [b.summary, ...b.items] : [])).concat(a.brief ? [a.brief.morning, a.brief.corporator] : []).filter((l) => !l.qc1).length : 0
   const left = w.budget - w.spent
 
-  const copy = (text: string) => {
-    navigator.clipboard?.writeText(text).then(() => {
-      setCopied(true)
-      setTimeout(() => setCopied(false), 1500)
-    })
-  }
-
   const L = ACT[lang]
   if (!officer) {
     return (
@@ -189,7 +204,7 @@ export default function WardDesk() {
             {facts.wards.map((x) => <option key={x.code} value={x.code}>{x.code}: {x.name}</option>)}
           </select>
         </label>
-        <button className="wd-btn" onClick={() => { const o = { name: loginName.trim() || 'Ward Officer', ward: code }; localStorage.setItem('wd-officer', JSON.stringify(o)); setOfficer(o) }}>{L.go}</button>
+        <button className="wd-btn" onClick={() => { const o = { name: loginName.trim() || 'Ward Officer', ward: code }; setTab(0); localStorage.setItem('wd-officer', JSON.stringify(o)); setOfficer(o) }}>{L.go}</button>
         <p className="wd-note">{L.demoNote}</p>
       </div>
     )
@@ -197,7 +212,6 @@ export default function WardDesk() {
   const acts = actionMeta(w)
   const status = (a: Act) => done[w.code + '|' + a.key]
   const setStatus = (a: Act, v?: string) => setDone((d) => { const n = { ...d }; if (v) n[w.code + '|' + a.key] = v; else delete n[w.code + '|' + a.key]; return n })
-  const doneCount = acts.filter(status).length
   const claimed = acts.filter((a) => status(a) && status(a) !== 'ok').reduce((s2, a) => s2 + a.amount, 0)
   const informed = acts.filter((a) => a.citizen && status(a) && status(a) !== 'ok').length
 
@@ -209,14 +223,7 @@ export default function WardDesk() {
         <button onClick={() => { localStorage.removeItem('wd-officer'); setOfficer(null) }}>{L.signout}</button>
       </div>
       <div className="wd-top">
-        <label>
-          {t.pick}{' '}
-          <select value={w.code} onChange={(e) => setCode(e.target.value)}>
-            {facts.wards.map((x) => (
-              <option key={x.code} value={x.code}>{x.code}: {x.name}</option>
-            ))}
-          </select>
-        </label>
+        <b className="wd-wardname">{w.code}: {w.name}</b>
         <div className="wd-lang" role="group" aria-label="Language">
           <button aria-pressed={lang === 'en'} onClick={() => setLang('en')}>English</button>
           <button aria-pressed={lang === 'mr'} onClick={() => setLang('mr')}>मराठी</button>
@@ -239,51 +246,63 @@ export default function WardDesk() {
         ))}
       </nav>
 
-      {a && <p className="wd-note">{t.badgeNote}</p>}
+      {a && tab !== 0 && <p className="wd-note">{t.badgeNote}</p>}
       {!a && <p className="wd-note">{t.noAgent}</p>}
       {held > 0 && <p className="wd-note">{held} {t.held}</p>}
 
-      {tab === 0 && (
-        <section>
-          <h2>{t.today}</h2>
-          <div className="wd-progress" aria-label="progress">
-            <div className="bar"><span style={{ width: `${acts.length ? (doneCount / acts.length) * 100 : 0}%` }} /></div>
-            <small><b>{doneCount}/{acts.length}</b> {L.progress} · <b>{inr(lang, claimed)}</b> {L.held} · <b>{informed}</b> {L.citizens}</small>
-          </div>
-          <ol className="wd-actions">
-            {todayActions(w, lang).map((x, i) => {
-              const a = acts[i]
-              const st = a && status(a)
-              return (
-                <li key={x} className={st ? 'wd-done' : ''}>
-                  {x} {!st && <span className="wd-qc warn">{t.verify}</span>}
-                  {a && (
-                    <div className="wd-act">
-                      {!st && <>
-                        <button className="wd-btn" onClick={() => setStatus(a, 'act')}>{L[a.kind][0]}</button>
-                        <button className="wd-btn ghost" onClick={() => setStatus(a, 'ok')}>{L.ok}</button>
-                      </>}
-                      {st && <>
-                        <span className="wd-qc ok">✓ {st === 'ok' ? L.ok : L[a.kind][1]}</span>
-                        <button className="wd-link" onClick={() => setStatus(a)}>{L.undo}</button>
-                      </>}
-                      {st && st !== 'ok' && a.citizen && <small className="wd-cit">📱 {L.citizen} {a.citizen}: “{L[a.kind][1]}”</small>}
-                    </div>
-                  )}
-                </li>
-              )
-            })}
-          </ol>
-          <button className="wd-btn" onClick={() => copy(`${w.code} · ${t.today}\n` + todayActions(w, lang).map((x, i) => `${i + 1}. ${x}`).join('\n'))}>{copied ? t.copied : t.copyAll}</button>
-          <h2>{t.morning}</h2>
-          <AgentText l={a?.brief?.morning} lang={lang} />
-          <h2>{t.corp}</h2>
-          <AgentText l={a?.brief?.corporator} lang={lang} />
-          {a?.brief?.corporator.qc1 && (
-            <button className="wd-btn" onClick={() => copy(a.brief!.corporator[lang])}>{copied ? t.copied : t.copy}</button>
-          )}
-        </section>
-      )}
+      {tab === 0 && (() => {
+        const texts = todayActions(w, lang)
+        const decided = acts.filter(status).length
+        const outbox = acts.flatMap((x, i) => (status(x) && status(x) !== 'ok' ? messagesFor(x, texts[i], lang).map((m) => ({ ...m, at: status(x) })) : []))
+        const corp = a?.brief?.corporator
+        if (decided === acts.length && acts.length && corp?.qc1) outbox.push({ ch: 'email', to: `${L.corpTo} ${w.code}`, subject: `${L.corpSubj}: ${corp[lang].slice(0, 90)}…`, at: '' })
+        return (
+          <section>
+            {a?.brief?.morning.qc1 && <div className="wd-summary"><b>{L.summary}</b><AgentText l={a.brief.morning} lang={lang} /></div>}
+            <ol className="wd-steps">
+              <li className={decided < acts.length ? 'on' : 'done'}>① {L.steps[0]}</li>
+              <li className={decided < acts.length ? 'on' : 'done'}>② {L.steps[1]} · {acts.length - decided} {L.pending}</li>
+              <li className={outbox.length ? 'done' : ''}>③ {L.steps[2]} · {outbox.length}</li>
+            </ol>
+            <div className="wd-progress"><div className="bar"><span style={{ width: `${acts.length ? (decided / acts.length) * 100 : 0}%` }} /></div>
+              <small><b>{decided}/{acts.length}</b> {L.progress} · <b>{inr(lang, claimed)}</b> {L.held} · <b>{informed}</b> {L.citizens}</small></div>
+            <ol className="wd-cards">
+              {texts.map((x, i) => {
+                const act = acts[i]
+                const st = act && status(act)
+                return (
+                  <li key={x} className={st ? 'done' : ''}>
+                    <p>{x}</p>
+                    {act && !st && (
+                      <div className="wd-act">
+                        <button className="wd-btn" onClick={() => setStatus(act, new Date().toTimeString().slice(0, 5))}>{L.approve}</button>
+                        <button className="wd-btn ghost" onClick={() => setStatus(act, 'ok')}>{L.dismiss}</button>
+                      </div>
+                    )}
+                    {act && st && (
+                      <div className="wd-act">
+                        <span className="wd-qc ok">✓ {st === 'ok' ? L.ok : L[act.kind][1]}</span>
+                        {st !== 'ok' && messagesFor(act, x, lang).map((m) => <small key={m.to} className="wd-cit">{m.ch === 'sms' ? '📱' : '✉'} {L.sentTo} {m.to}</small>)}
+                        <button className="wd-link" onClick={() => setStatus(act)}>{L.undo}</button>
+                      </div>
+                    )}
+                  </li>
+                )
+              })}
+            </ol>
+            <h2>{L.outbox}</h2>
+            {outbox.length === 0 ? <p className="wd-note">{L.empty}</p> : (
+              <ul className="wd-list wd-outbox">
+                {outbox.map((m, i) => (
+                  <li key={i}><div className="wd-row"><span className="wd-tag">{m.ch === 'sms' ? '📱 SMS' : '✉ Email'}</span><b>{m.to}</b><span className="wd-amt">{m.at}</span></div><small>{m.subject}</small></li>
+                ))}
+              </ul>
+            )}
+            {decided < acts.length && <p className="wd-note">{L.corpWait}</p>}
+            <p className="wd-note">{L.simNote}</p>
+          </section>
+        )
+      })()}
 
       {tab === 2 && (
         <section>
