@@ -66,6 +66,15 @@ export type Ward = {
   slaMissRate: number
   shouldHavePaid: { total: number; workOrders: number; byType: Record<string, { count: number; amount: number }> }
   flags: Flag[]
+  citizens: {
+    notFixed: { id: string; citizens: number; wo: string; road: string; contractor: string; method: string; fixedAt: string; locality: string }[]
+    notFixedCount: number
+    inbox: { key: string; locality: string; kind: 'road' | 'water' | 'manhole' | 'other'; count: number; ids: string[]; channels: string[]; langs: string[]; upvotes: number; misfiled: number; sample: string }[]
+    openCount: number
+    journey: { id: string; locality: string; kind: 'road' | 'water' | 'manhole' | 'other'; received: string; assigned: string; due: string; overdueDays: number; status: string }[]
+    handoff: { id: string; locality: string; kind: 'road' | 'water' | 'manhole' | 'other'; status: string; owner: string; upvotes: number; text: string }[]
+    handoffCount: number
+  }
   repeats: { count: number; examples: { closed: string; closedAt: string; again: string; againAt: string; kind: "road" | "water" | "manhole" | "other"; metres: number; locality: string; text: string; days: number }[] }
   complaints: {
     total: number

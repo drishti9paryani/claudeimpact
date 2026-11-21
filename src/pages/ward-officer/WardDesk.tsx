@@ -6,7 +6,7 @@ import './ward-officer.css'
 const T = {
   en: {
     pick: 'Your ward', budget: 'Budget', spent: 'Spent', shp: 'Payments to check', reworded: 'Reworded for fairness', outOf: 'out of 1', badgeNote: 'Every AI line passed the evidence check (lines that failed are hidden). Tags appear only when the fairness check reworded a line or added a caveat; hover to see why.', kinds: { road: 'pothole / road', water: 'waterlogging', manhole: 'manhole', other: 'other' }, crews: 'Crews / day', flood: 'Flood risk',
-    tabs: ['Today', 'Who should have paid', 'Fixed or just closed?', 'Lost complaints', 'Next rupee', 'Contractors', 'Why this'],
+    tabs: ['Today', 'Citizens', 'Who should have paid', 'Fixed or just closed?', 'Lost complaints', 'Next rupee', 'Contractors', 'Why this'],
     today: "Today's 5 actions", asOf: 'Data as of 10 Oct 2025 (event dataset)', verify: 'Verify first', copyAll: 'Copy for WhatsApp',
     repeatsH: 'Marked resolved, then a new complaint at the same spot (within 50 m, 1 to 30 days later)',
     morning: 'Morning brief', corp: 'Reply to corporator', copy: 'Copy', copied: 'Copied',
@@ -20,7 +20,7 @@ const T = {
   },
   mr: {
     pick: 'तुमचा वॉर्ड', budget: 'बजेट', spent: 'खर्च', shp: 'तपासायची देयके', reworded: 'न्याय्यतेसाठी पुन्हा लिहिले', outOf: '1 पैकी', badgeNote: 'प्रत्येक AI ओळ पुरावा तपासणीत पास झाली (अपयशी ओळी लपवल्या). न्याय्यता तपासणीने ओळ बदलली किंवा इशारा जोडला तरच टॅग दिसतो.', kinds: { road: 'खड्डा / रस्ता', water: 'पाणी साचणे', manhole: 'मॅनहोल', other: 'इतर' }, crews: 'रोजची पथके', flood: 'पूर धोका',
-    tabs: ['आज', 'कोणी भरायला हवे होते', 'खरंच दुरुस्त?', 'हरवलेल्या तक्रारी', 'पुढचा रुपया', 'कंत्राटदार', 'का?'],
+    tabs: ['आज', 'नागरिक', 'कोणी भरायला हवे होते', 'खरंच दुरुस्त?', 'हरवलेल्या तक्रारी', 'पुढचा रुपया', 'कंत्राटदार', 'का?'],
     today: 'आजची 5 कामे', asOf: 'डेटा 10 ऑक्टो 2025 पर्यंतचा (इव्हेंट डेटासेट)', verify: 'आधी तपासा', copyAll: 'WhatsApp साठी कॉपी',
     repeatsH: 'सोडवली म्हणून बंद, नंतर त्याच जागी नवी तक्रार (50 मी. आत, 1 ते 30 दिवसांत)',
     morning: 'सकाळचा आढावा', corp: 'नगरसेवकांना उत्तर', copy: 'कॉपी', copied: 'कॉपी झाले',
@@ -100,6 +100,7 @@ const ACT = {
     ok: 'Checked: no issue', undo: 'Undo', citizen: 'Citizen sees on their complaint',
     login: 'Sign in to Ward Desk', name: 'Your name', ward: 'Your ward', go: 'Sign in', demoNote: 'Demo sign-in: no password, nothing leaves this browser.',
     approve: 'Approve & send', dismiss: 'No issue', steps: ['Review', 'Decide', 'Sent automatically'], outbox: 'Outbox', pending: 'to decide', sentTo: 'Sent to', corpTo: 'Corporator(s), ward', corpSubj: 'Daily ward update', corpWait: 'Corporator update sends itself when all actions are decided', simNote: 'Demo: messages are simulated. In use they would go through the BMC email/SMS gateway.', empty: 'Nothing sent yet. Approve an action above.', summary: 'This morning',
+    cz: { notFixedH: 'Citizens say "not fixed"', notFixedSub: 'After each repair the citizen gets an SMS: Fixed? Yes / No. These said No (repair reopened within 30 days).', reopen: 'Reopen job + flag contractor', reopened: 'Job reopened, contractor flagged', inboxH: 'Smart inbox: complaints grouped into issues', inboxSub: 'Claude groups complaints about the same problem at the same place, across app, helpline, web and languages.', complaints: 'complaints', merge: 'Merge into 1 issue + 1 work order', merged: 'Merged: 1 work order, all complainants told', journeyH: 'Complaint journey and deadline', journeySub: 'Every complaint shows where it is stuck. Overdue ones can be escalated.', received: 'Received', assigned: 'Assigned', due: 'Due', overdue: 'days overdue', escalate: 'Escalate to Deputy Commissioner', escalated: 'Escalated, citizen told the new date', handoffH: 'Not our road: hand off, don\'t reject', handoffSub: 'Instead of a silent rejection, the complaint is forwarded with a letter and the citizen is told who owns the road.', forward: 'Forward with letter + tell citizen', forwarded: 'Forwarded, citizen told who owns it', ofTotal: 'of', upv: 'upvotes', sms: 'SMS to citizen' },
     signout: 'Sign out', reset: 'Reset demo', hello: 'Signed in as', progress: 'done today', held: 'claimed or on hold', citizens: 'citizens updated',
   },
   mr: {
@@ -111,6 +112,7 @@ const ACT = {
     ok: 'तपासले: अडचण नाही', undo: 'रद्द करा', citizen: 'नागरिकाला त्यांच्या तक्रारीवर दिसते',
     login: 'Ward Desk मध्ये साइन इन करा', name: 'तुमचे नाव', ward: 'तुमचा वॉर्ड', go: 'साइन इन', demoNote: 'डेमो साइन-इन: पासवर्ड नाही, काहीही या ब्राउझरबाहेर जात नाही.',
     approve: 'मंजूर करा व पाठवा', dismiss: 'अडचण नाही', steps: ['पाहा', 'निर्णय', 'आपोआप पाठवले'], outbox: 'पाठवलेले', pending: 'निर्णय बाकी', sentTo: 'पाठवले:', corpTo: 'नगरसेवक, वॉर्ड', corpSubj: 'दैनिक वॉर्ड अहवाल', corpWait: 'सर्व कामांवर निर्णय झाल्यावर नगरसेवकांना अहवाल आपोआप जाईल', simNote: 'डेमो: संदेश प्रत्यक्ष पाठवले जात नाहीत. वापरात ते BMC ईमेल/SMS प्रणालीतून जातील.', empty: 'अजून काही पाठवले नाही. वरील काम मंजूर करा.', summary: 'आज सकाळी',
+    cz: { notFixedH: 'नागरिक म्हणतात "दुरुस्त झाले नाही"', notFixedSub: 'प्रत्येक दुरुस्तीनंतर नागरिकाला SMS: दुरुस्त झाले? हो / नाही. यांनी नाही म्हटले (30 दिवसांत पुन्हा उघडले).', reopen: 'काम पुन्हा उघडा + कंत्राटदार नोंद', reopened: 'काम पुन्हा उघडले, कंत्राटदाराची नोंद', inboxH: 'स्मार्ट इनबॉक्स: तक्रारी एका मुद्द्यात', inboxSub: 'एकाच जागी एकाच अडचणीच्या तक्रारी (ॲप, हेल्पलाइन, वेब, सर्व भाषा) Claude एकत्र करते.', complaints: 'तक्रारी', merge: '1 मुद्दा + 1 काम आदेश करा', merged: 'एकत्र केले: 1 काम आदेश, सर्व तक्रारदारांना कळवले', journeyH: 'तक्रारीचा प्रवास व मुदत', journeySub: 'प्रत्येक तक्रार कुठे अडली ते दिसते. मुदत संपलेल्या वर नेता येतात.', received: 'मिळाली', assigned: 'नेमली', due: 'मुदत', overdue: 'दिवस उशीर', escalate: 'उपायुक्तांकडे पाठवा', escalated: 'वर पाठवले, नागरिकाला नवी तारीख कळवली', handoffH: 'आमचा रस्ता नाही: नाकारू नका, सुपूर्द करा', handoffSub: 'शांतपणे नाकारण्याऐवजी पत्रासह पुढे पाठवा आणि रस्ता कोणाचा ते नागरिकाला सांगा.', forward: 'पत्रासह पाठवा + नागरिकाला कळवा', forwarded: 'पाठवले, नागरिकाला मालक कळवला', ofTotal: 'पैकी', upv: 'अपवोट', sms: 'नागरिकाला SMS' },
     signout: 'साइन आउट', reset: 'डेमो रीसेट', hello: 'साइन इन:', progress: 'आज पूर्ण', held: 'दावा केले / थांबवले', citizens: 'नागरिकांना कळवले',
   },
 }
@@ -304,7 +306,7 @@ export default function WardDesk() {
         )
       })()}
 
-      {tab === 2 && (
+      {tab === 3 && (
         <section>
           <h2>{t.repeatsH}: {w.repeats.count}</h2>
           <ul className="wd-list">
@@ -319,7 +321,74 @@ export default function WardDesk() {
         </section>
       )}
 
-      {tab === 1 && (
+      {tab === 1 && (() => {
+        const c = w.citizens, C = L.cz
+        const key = (k: string) => w.code + '|cz:' + k
+        const st = (k: string) => done[key(k)]
+        const mark = (k: string, v?: string) => setDone((d) => { const n = { ...d }; if (v) n[key(k)] = v; else delete n[key(k)]; return n })
+        const Btn = ({ k, label, doneLabel }: { k: string; label: string; doneLabel: string }) => st(k)
+          ? <div className="wd-act"><span className="wd-qc ok">✓ {doneLabel}</span><small className="wd-cit">📱 {C.sms} · {st(k)}</small><button className="wd-link" onClick={() => mark(k)}>{L.undo}</button></div>
+          : <div className="wd-act"><button className="wd-btn" onClick={() => mark(k, new Date().toTimeString().slice(0, 5))}>{label}</button></div>
+        return (
+          <section>
+            <h2>{C.notFixedH} · {c.notFixedCount}</h2>
+            <p className="wd-note">{C.notFixedSub}</p>
+            <ul className="wd-list">
+              {c.notFixed.map((x) => (
+                <li key={x.id}>
+                  <div className="wd-row"><b>{x.wo}</b><span className="wd-tag warranty">✗ {x.citizens} {lang === 'mr' ? 'नागरिक: नाही' : (x.citizens > 1 ? 'citizens said No' : 'citizen said No')}</span><span className="wd-amt">{x.id}</span></div>
+                  <small>{x.locality} · {x.road} · {x.contractor} · {method(lang, x.method)} · {x.fixedAt.slice(0, 10)}</small>
+                  <Btn k={'nf:' + x.wo} label={C.reopen} doneLabel={C.reopened} />
+                </li>
+              ))}
+            </ul>
+
+            <h2>{C.inboxH} · {c.inbox.reduce((s2, g) => s2 + g.count, 0)} {C.ofTotal} {c.openCount}</h2>
+            <p className="wd-note">{C.inboxSub}</p>
+            <ul className="wd-list">
+              {c.inbox.map((g) => (
+                <li key={g.key}>
+                  <div className="wd-row"><b>{g.locality}</b><span className="wd-tag">{t.kinds[g.kind]}</span><span className="wd-tag act">{g.count} {C.complaints}</span><span className="wd-amt">{g.upvotes} {C.upv}</span></div>
+                  <small>{g.channels.join(' · ')} · {g.langs.join(', ')}{g.misfiled ? ` · ${g.misfiled} misfiled` : ''}</small>
+                  <p className="wd-quote">“{g.sample}”</p>
+                  <Btn k={'ib:' + g.key} label={C.merge} doneLabel={C.merged} />
+                </li>
+              ))}
+            </ul>
+
+            <h2>{C.journeyH}</h2>
+            <p className="wd-note">{C.journeySub}</p>
+            <ul className="wd-list">
+              {c.journey.map((j) => (
+                <li key={j.id}>
+                  <div className="wd-row"><b>{j.id}</b><span className="wd-tag">{t.kinds[j.kind]}</span>{j.overdueDays > 0 && <span className="wd-tag warranty">{j.overdueDays} {C.overdue}</span>}</div>
+                  <ol className="wd-journey">
+                    <li className="done">{C.received} {j.received.slice(5, 16)}</li>
+                    <li className={j.assigned ? 'done' : ''}>{C.assigned} {j.assigned ? j.assigned.slice(5, 16) : '—'}</li>
+                    <li className={j.overdueDays > 0 ? 'late' : ''}>{C.due} {j.due.slice(5, 16)}</li>
+                  </ol>
+                  <small>{j.locality} · {j.status}</small>
+                  {j.overdueDays > 0 && <Btn k={'jr:' + j.id} label={C.escalate} doneLabel={C.escalated} />}
+                </li>
+              ))}
+            </ul>
+
+            <h2>{C.handoffH} · {c.handoffCount}</h2>
+            <p className="wd-note">{C.handoffSub}</p>
+            <ul className="wd-list">
+              {c.handoff.map((h) => (
+                <li key={h.id}>
+                  <div className="wd-row"><b>{h.id}</b><span className="wd-tag">{t.kinds[h.kind]}</span><span className="wd-tag">{h.status}</span><span className="wd-amt">→ {h.owner}</span></div>
+                  <p className="wd-quote">“{h.text}”</p>
+                  <Btn k={'ho:' + h.id} label={C.forward} doneLabel={C.forwarded} />
+                </li>
+              ))}
+            </ul>
+          </section>
+        )
+      })()}
+
+      {tab === 2 && (
         <section>
           <AgentText l={a?.auditor?.summary} lang={lang} />
           <div className="wd-chips">
@@ -351,7 +420,7 @@ export default function WardDesk() {
         </section>
       )}
 
-      {tab === 3 && (
+      {tab === 4 && (
         <section>
           <AgentText l={a?.triage?.summary} lang={lang} />
           {([
@@ -384,7 +453,7 @@ export default function WardDesk() {
         </section>
       )}
 
-      {tab === 4 && (
+      {tab === 5 && (
         <section>
           <AgentText l={a?.planner?.summary} lang={lang} />
           <ol className="wd-list">
@@ -407,7 +476,7 @@ export default function WardDesk() {
         </section>
       )}
 
-      {tab === 5 && (
+      {tab === 6 && (
         <section>
           <p className="wd-note">{t.contractorNote}</p>
           <div className="wd-table-wrap">
@@ -427,7 +496,7 @@ export default function WardDesk() {
         </section>
       )}
 
-      {tab === 6 && (
+      {tab === 7 && (
         <section className="wd-research">
           <h2>A ward officer's day</h2>
           <ul>{day.map((d) => <li key={d.when}><b>{d.when}:</b> {d.what}</li>)}</ul>

@@ -85,6 +85,11 @@ ol.wd-list { list-style: decimal; padding-left: 20px; }
 .wd-cards li.done { border-color: var(--accent); opacity: 0.8; }
 .wd-cards li.done::before { content: '✓'; }
 .wd-cards p { margin: 0; color: var(--text-h); }
+.wd-journey { list-style: none; display: flex; flex-wrap: wrap; gap: 4px; padding: 0; margin: 8px 0 4px; font-size: 0.8rem; }
+.wd-journey li { padding: 3px 10px; border-radius: 999px; border: 1px solid var(--border); }
+.wd-journey li.done { border-color: var(--accent); color: var(--accent); }
+.wd-journey li.late { border-color: var(--bad); color: var(--bad); }
+.wd-journey li + li::before { content: '→ '; }
 .wd-progress { margin: 4px 0 12px; }
 .wd-progress .bar { height: 8px; border-radius: 999px; background: var(--muted-bg); overflow: hidden; }
 .wd-progress .bar span { display: block; height: 100%; background: var(--accent); transition: width 0.3s; }

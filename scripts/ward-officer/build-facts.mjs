@@ -46,7 +46,7 @@ const SURFACE = new Set(['Cold mix patch', 'Hot mix patch', 'Mastic asphalt', 'P
 // Complaint "kind", read from category plus text (about 18% of categories are wrong).
 const kind = (c) => {
   const s = `${c.category_reported} ${c.description} ${c.photo_description}`
-  return /pothole|khadd|gadd|crater|cave|paver|गड्ढ|खड्ड/i.test(s) ? 'road' : /manhole|chamber|gutter lid/i.test(s) ? 'manhole' : /water|flood|drain|nullah|paani/i.test(s) ? 'water' : 'other'
+  return /pothole|khadd|gadd|crater|cave|paver|गड्ढ|खड्ड/i.test(s) ? 'road' : /manhole|chamber|gutter lid|dhakkan|gutter ka|झाकण/i.test(s) ? 'manhole' : /water|flood|drain|nullah|paani/i.test(s) ? 'water' : 'other'
 }
 const OVERBILL_RATIO = 1.4// normal jobs vary 20-30% around the rate card (DATA_DICTIONARY)
 
@@ -106,6 +106,42 @@ function roadRisk(r) {
   }
 }
 
+// ---- citizen-connected views ----
+const DATA_AS_OF = '2025-10-10 23:59'
+const SLA_BY_KIND = { manhole: 24, water: 48, road: 72, other: 168 } // hours, when no work order gives one
+const addH = (s, h) => new Date(new Date(s.replace(' ', 'T') + 'Z').getTime() + h * 36e5).toISOString().slice(0, 16).replace('T', ' ')
+function citizenView(wc, jobs) {
+  const byComplaint = {}
+  for (const j of jobs) for (const id of j.linked_complaint_ids.split('|').filter(Boolean)) byComplaint[id] = j
+  // 1. "Was it fixed?": complaints whose linked repair reopened within 30 days = citizen says No.
+  // One card per reopened job, with how many citizens said No.
+  const nfByWo = {}
+  for (const c of wc.filter((c) => byComplaint[c.complaint_id]?.reopened_within_30d === 'Y')) (nfByWo[byComplaint[c.complaint_id].work_order_id] ??= []).push(c)
+  const notFixed = Object.values(nfByWo).sort((x, y) => y.length - x.length).slice(0, 6).map((cs) => {
+    const c = cs[0], j = byComplaint[c.complaint_id]
+    return { id: c.complaint_id, citizens: cs.length, wo: j.work_order_id, road: ROAD[j.road_id]?.road_name ?? j.road_id, contractor: j.contractor_name.replace(' (synthetic)', ''), method: j.repair_method, fixedAt: j.completed_at, locality: c.locality_text }
+  })
+  const notFixedCount = wc.filter((c) => byComplaint[c.complaint_id]?.reopened_within_30d === 'Y').length
+  // 2. Smart inbox: open complaints grouped by locality + kind (duplicates across channels/languages).
+  const open = wc.filter((c) => c.status === 'Open' || c.status === 'In Progress')
+  const groups = {}
+  for (const c of open) (groups[c.locality_text + '|' + kind(c)] ??= []).push(c)
+  const inbox = Object.values(groups).sort((a, b) => b.length - a.length).slice(0, 6).map((g) => ({
+    key: g[0].locality_text + '|' + kind(g[0]), locality: g[0].locality_text, kind: kind(g[0]), count: g.length, ids: g.map((c) => c.complaint_id),
+    channels: [...new Set(g.map((c) => c.channel))], langs: [...new Set(g.map((c) => c.language))], upvotes: g.reduce((s, c) => s + num(c.upvotes), 0),
+    misfiled: g.filter((c) => kind(c) === 'road' && !/pothole|cave|paver/i.test(c.category_reported)).length, sample: g[0].description.slice(0, 140),
+  }))
+  // 3. Journey + deadline for the oldest open complaints.
+  const journey = open.sort((a, b) => a.received_at.localeCompare(b.received_at)).slice(0, 5).map((c) => {
+    const j = byComplaint[c.complaint_id], sla = j ? num(j.sla_hours) : SLA_BY_KIND[kind(c)], due = addH(c.received_at, sla)
+    return { id: c.complaint_id, locality: c.locality_text, kind: kind(c), received: c.received_at, assigned: j?.assigned_at ?? '', due, overdueDays: Math.max(0, Math.round((new Date(DATA_AS_OF) - new Date(due)) / 864e5)), status: c.status }
+  })
+  // 4. Not-our-road: rejected / forwarded complaints, with who owns the road.
+  const bounced = wc.filter((c) => /^(Rejected - Not BMC road|Forwarded to MMRDA\/PWD)/.test(c.status))
+  const handoff = bounced.slice(0, 5).map((c) => ({ id: c.complaint_id, locality: c.locality_text, kind: kind(c), status: c.status, owner: c.status.startsWith('Forwarded') ? 'MMRDA / PWD' : 'Other agency (MMRDA / PWD / MSRDC)', upvotes: num(c.upvotes), text: c.description.slice(0, 120) }))
+  return { notFixed, notFixedCount, inbox, openCount: open.length, journey, handoff, handoffCount: bounced.length }
+}
+
 // ---- per-ward facts ----
 const out = { generatedFrom: 'Claude-Impact-Labs-data-2 (synthetic)', overbillRatio: OVERBILL_RATIO, wards: [] }
 for (const wd of wards) {
@@ -157,6 +193,7 @@ for (const wd of wards) {
     slaMissRate: +(jobs.filter((w) => w.sla_met === 'N').length / jobs.length).toFixed(3),
     shouldHavePaid: { total: Object.values(perWo).reduce((a, b) => a + b, 0), workOrders: Object.keys(perWo).length, byType },
     flags: wf.sort((a, b) => b.amount - a.amount),
+    citizens: citizenView(wc, jobs),
     repeats: { count: repeats.length, examples: repeats.sort((a, b) => a.days - b.days) },
     complaints: { total: wc.length, open: open.length, misfiled: misfiled.length, bounced: bounced.length, oldestOpen: open.slice(0, 5).map(pick), misfiledExamples: misfiled.slice(0, 5).map(pick), bouncedExamples: bounced.slice(0, 5).map(pick) },
     contractors: Object.values(contractors).map((c) => ({ name: c.name, jobs: c.jobs, reopenRate: +(c.reopened / c.jobs).toFixed(2), slaMissRate: +(c.slaMissed / c.jobs).toFixed(2), avgCostVsRate: c.ratioN ? +(c.costRatioSum / c.ratioN).toFixed(2) : null, heavyRainShare: +(c.heavyRainJobs / c.jobs).toFixed(2) })).sort((a, b) => b.jobs - a.jobs),
