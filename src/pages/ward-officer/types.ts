@@ -15,6 +15,7 @@ export type Flag = {
   cost: number
   method: string
   heavyRainWeek: boolean
+  bigTide: boolean
 }
 
 export type Complaint = {
@@ -45,6 +46,8 @@ export type Road = {
   hospitals: string[]
   schools: number
   floodSpots: string[]
+  tideSpots: string[]
+  tideReopens: number
   ageYears: number
   spent: number
   method: string
@@ -76,6 +79,7 @@ export type Ward = {
     handoffCount: number
   }
   repeats: { count: number; examples: { closed: string; closedAt: string; again: string; againAt: string; kind: "road" | "water" | "manhole" | "other"; metres: number; locality: string; text: string; days: number }[] }
+  placed: { typed: number; gps: number }
   complaints: {
     total: number
     open: number

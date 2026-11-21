@@ -31,7 +31,7 @@ if (!dir) { console.error('Pass the event data folder'); process.exit(1) }
 const rd = (f) => parseCsv(readFileSync(join(dir, f), 'utf8'))
 const wards = rd('wards.csv'), wo = rd('work_orders.csv'), roads = rd('roads.csv'), rate = rd('rate_card.csv')
 const comps = rd('complaints.csv'), acc = rd('accidents.csv'), fac = rd('facilities.csv'), flood = rd('flood_hotspots.csv')
-const traffic = rd('traffic.csv'), rain = rd('rainfall_daily.csv')
+const traffic = rd('traffic.csv'), rain = rd('rainfall_daily.csv'), tides = rd('tides.csv'), locs = rd('localities.csv')
 
 const num = (x) => Number(x) || 0
 const RATE = Object.fromEntries(rate.map((r) => [r.repair_method, r]))
@@ -52,6 +52,17 @@ const OVERBILL_RATIO = 1.4// normal jobs vary 20-30% around the rate card (DATA_
 
 // Heavy-rain days (any station >= 64.5 mm, IMD "Heavy" or worse) for fairness context.
 const heavyDays = new Set(rain.filter((r) => num(r.rainfall_mm) >= 64.5).map((r) => r.date))
+// Big-tide days (high tide >= 4.5 m): sea outfalls close, so rain water cannot drain and patches sit under water.
+const bigTideDays = new Set(tides.filter((t) => t.big_tide_flag === 'Y').map((t) => t.date))
+
+// ---- place complaints with no ward, from the typed locality (names + aliases, incl. Devanagari) ----
+const norm = (s) => s.toLowerCase().normalize('NFC').replace(/[^\p{L}\p{M}\p{N}]+/gu, ' ').trim()
+const NAMES = locs.flatMap((l) => [l.locality, ...l.aliases.split(';')].map((n) => [norm(n), l])).filter(([n]) => n.length >= 3).sort((a, b) => b[0].length - a[0].length)
+// Whole-word match only, longest name wins (so a short alias never matches inside a longer word).
+export const placeLocality = (text) => { const t = ` ${norm(text)} `; return NAMES.find(([n]) => t.includes(` ${n} `))?.[1] }
+assert.strictEqual(placeLocality('near Bhaykhala station')?.ward_code, 'E')
+assert.strictEqual(placeLocality('भायखळा')?.ward_code, 'E')
+assert.strictEqual(placeLocality('Sionnn'), undefined)
 
 // ---- who-should-have-paid flags ----
 const flags = []
@@ -89,9 +100,11 @@ function roadRisk(r) {
   const hospitals = fac.filter((f) => f.ambulance_entry_road === r.road_id && f.type === 'Hospital')
   const schools = fac.filter((f) => f.ambulance_entry_road === r.road_id && f.type === 'School')
   const nearFlood = flood.filter((h) => hav(mid[0], mid[1], num(h.lat), num(h.lon)) < 600)
+  const tideSpots = nearFlood.filter((h) => h.tide_sensitive === 'Y')
+  const tideReopens = jobs.filter((w) => w.reopened_within_30d === 'Y' && bigTideDays.has(w.completed_at.slice(0, 10))).length
   const t = TRAF[r.road_id]
   const ageYears = r.last_resurfaced ? (new Date('2025-10-01') - new Date(r.last_resurfaced)) / 3.156e10 : 0
-  const score = reopens * 2 + accScore * 3 + hospitals.length * 6 + schools.length * 2 + nearFlood.length * 4 +
+  const score = reopens * 2 + accScore * 3 + hospitals.length * 6 + schools.length * 2 + nearFlood.length * 4 + tideSpots.length * 2 +
     (r.bus_route === 'Y' ? 2 : 0) + num(t?.congestion_index_0_10) * 0.5 + Math.min(ageYears, 10) * 0.5
   const avgArea = potJobs.length ? potJobs.reduce((s, w) => s + num(w.area_sqm), 0) / potJobs.length : 10
   let method, cost
@@ -101,7 +114,7 @@ function roadRisk(r) {
   return {
     road: r.road_id, name: r.road_name, segment: num(r.segment_no), surface: r.surface, underWarranty: r.under_dlp === 'Y', busRoute: r.bus_route === 'Y',
     score: +score.toFixed(1), jobs: jobs.length, reopens, coldFails, accidents: accs.length, fatal: accs.filter((a) => a.severity === 'Fatal').length,
-    hospitals: hospitals.map((h) => h.name), schools: schools.length, floodSpots: nearFlood.map((h) => h.name), ageYears: +ageYears.toFixed(1),
+    hospitals: hospitals.map((h) => h.name), schools: schools.length, floodSpots: nearFlood.map((h) => h.name), tideSpots: tideSpots.map((h) => h.name), tideReopens, ageYears: +ageYears.toFixed(1),
     spent: jobs.reduce((s, w) => s + num(w.cost_inr), 0), method, estCost: cost,
   }
 }
@@ -143,6 +156,18 @@ function citizenView(wc, jobs) {
 }
 
 // ---- per-ward facts ----
+const placed = {}
+for (const c of comps) {
+  if (c.ward_code) continue
+  let l = placeLocality(c.locality_text), how = 'typed locality'
+  if (!l && c.lat && c.lon) {
+    const near = locs.map((x) => [hav(num(c.lat), num(c.lon), num(x.lat), num(x.lon)), x]).sort((a, b) => a[0] - b[0])[0]
+    if (near && near[0] < 1500) { l = near[1]; how = 'GPS' }
+  }
+  if (l) { c.ward_code = l.ward_code; c.placedBy = how; (placed[l.ward_code] ??= { typed: 0, gps: 0 })[how === 'GPS' ? 'gps' : 'typed']++ }
+}
+const blank = comps.filter((c) => !c.placedBy && !c.ward_code).length
+console.log('blank-ward complaints placed:', Object.values(placed).reduce((s, p) => s + p.typed + p.gps, 0), 'still unplaced:', blank)
 const out = { generatedFrom: 'Claude-Impact-Labs-data-2 (synthetic)', overbillRatio: OVERBILL_RATIO, wards: [] }
 for (const wd of wards) {
   const code = wd.ward_code
@@ -150,7 +175,7 @@ for (const wd of wards) {
   const spent = jobs.reduce((s, w) => s + num(w.cost_inr), 0)
   const wf = flags.filter((f) => WO[f.wo].ward_code === code).map((f) => {
     const w = WO[f.wo]
-    return { ...f, road: w.road_id, roadName: ROAD[w.road_id]?.road_name ?? '', contractor: w.contractor_name.replace(' (synthetic)', ''), date: w.completed_at.slice(0, 10), cost: num(w.cost_inr), method: w.repair_method, heavyRainWeek: [...Array(7)].some((_, k) => heavyDays.has(new Date(new Date(w.completed_at.slice(0, 10)).getTime() - k * 864e5).toISOString().slice(0, 10))) }
+    return { ...f, road: w.road_id, roadName: ROAD[w.road_id]?.road_name ?? '', contractor: w.contractor_name.replace(' (synthetic)', ''), date: w.completed_at.slice(0, 10), cost: num(w.cost_inr), method: w.repair_method, bigTide: bigTideDays.has(w.completed_at.slice(0, 10)), heavyRainWeek: [...Array(7)].some((_, k) => heavyDays.has(new Date(new Date(w.completed_at.slice(0, 10)).getTime() - k * 864e5).toISOString().slice(0, 10))) }
   })
   // Dedup: one work order counts once, at its largest flagged amount.
   const perWo = {}
@@ -195,6 +220,7 @@ for (const wd of wards) {
     flags: wf.sort((a, b) => b.amount - a.amount),
     citizens: citizenView(wc, jobs),
     repeats: { count: repeats.length, examples: repeats.sort((a, b) => a.days - b.days) },
+    placed: placed[code] ?? { typed: 0, gps: 0 },
     complaints: { total: wc.length, open: open.length, misfiled: misfiled.length, bounced: bounced.length, oldestOpen: open.slice(0, 5).map(pick), misfiledExamples: misfiled.slice(0, 5).map(pick), bouncedExamples: bounced.slice(0, 5).map(pick) },
     contractors: Object.values(contractors).map((c) => ({ name: c.name, jobs: c.jobs, reopenRate: +(c.reopened / c.jobs).toFixed(2), slaMissRate: +(c.slaMissed / c.jobs).toFixed(2), avgCostVsRate: c.ratioN ? +(c.costRatioSum / c.ratioN).toFixed(2) : null, heavyRainShare: +(c.heavyRainJobs / c.jobs).toFixed(2) })).sort((a, b) => b.jobs - a.jobs),
     nextRupee: roadsHere.slice(0, 8),

@@ -9,7 +9,7 @@ All data is the event's synthetic data. Messages are simulated (the screen says 
 
 ## Page 1 · Sign in · 10 sec · `01-sign-in.png`
 **Click:** type **A. Patil**, pick **F/N**, press **Sign in**.
-**Say:** "I'm the ward officer for Matunga, Sion and Wadala. Every morning I have 50 open complaints, 6 crews and a monsoon budget to protect."
+**Say:** "I'm the ward officer for Matunga, Sion and Wadala. Every morning I have 53 open complaints, 6 crews and a monsoon budget to protect."
 
 ## Page 2 · Today: review · 20 sec · `02-today-before.png`
 **Point at:** the 5 top cards, then "This morning".
@@ -43,10 +43,10 @@ All data is the event's synthetic data. Messages are simulated (the screen says 
 **Say:** "Citizens' number one complaint is that 'closed' doesn't mean 'fixed'. We check the data itself: 19 spots where a complaint marked resolved came back within 30 days, at the same place, for the same problem."
 
 ## Page 7 · Lost complaints · 10 sec · `07-lost-complaints.png`
-**Say:** "Complaints the system lost: the photo shows a pothole but it was filed as something else, or it was bounced as a duplicate."
+**Say:** "Complaints the system lost: the photo shows a pothole but it was filed as something else, or it was bounced as a duplicate. And 19 complaints came in with no ward at all: we placed them from the typed locality, even Marathi spellings like शीव for Sion."
 
 ## Page 8 · Next rupee · 15 sec · `08-next-rupee.png`
-**Say:** "Where my next rupee goes: ranked by need, not by noise. Hospital ambulance roads, flood spots, accidents, patches that already failed. Two of these roads should cost us ₹0, because they're under warranty."
+**Say:** "Where my next rupee goes: ranked by need, not by noise. Hospital ambulance roads, flood spots, accidents, patches that already failed, and flood spots that big tides block (🌕). Two of these roads should cost us ₹0, because they're under warranty."
 
 ## Page 9 · Contractors · 10 sec · `09-contractors.png`
 **Say:** "Contractors are scored fairly: each one shows how much of their work fell in heavy-rain weeks, so nobody is blamed for the monsoon."

@@ -15,6 +15,8 @@ const T = {
     worth: 'Worth checking (not in total)', types: { warranty: 'Road under warranty', overbill: 'Over the rate card', double: 'Billed twice', utility: 'Utility trench' },
     loading: 'Loading…', noAgent: 'Agent notes not generated yet. Numbers below come straight from the data.',
     misfiled: 'Photo shows a pothole, filed as something else', bounced: 'Pothole complaints bounced or closed', open: 'Oldest still open',
+    placed: (n: number, g: number) => `${n} complaints had no ward. Placed here from the typed locality (incl. Marathi spellings)${g ? `, ${g} more from GPS` : ''}.`,
+    tide: 'big tides block drains here', tideReopen: (n: number) => `${n} patch failed after a big-tide day`,
     contractorNote: 'Read with context: heavy-rain share and flood risk change what a fair reopen rate looks like.',
     cols: ['Contractor', 'Jobs', 'Failed in 30 days', 'Missed deadline', 'Cost vs rate', 'Heavy-rain jobs'],
   },
@@ -29,6 +31,8 @@ const T = {
     worth: 'तपासण्यासारखे (एकूणात नाही)', types: { warranty: 'हमी कालावधीतील रस्ता', overbill: 'दरपत्रकापेक्षा जास्त', double: 'दोनदा बिल', utility: 'युटिलिटी खोदकाम' },
     loading: 'लोड होत आहे…', noAgent: 'एजंटच्या नोंदी अजून तयार नाहीत. खालील आकडे थेट डेटामधून आहेत.',
     misfiled: 'फोटोत खड्डा, पण दुसऱ्या प्रकारात नोंद', bounced: 'परत पाठवलेल्या / बंद केलेल्या खड्डा तक्रारी', open: 'सर्वात जुन्या उघड्या तक्रारी',
+    placed: (n: number, g: number) => `${n} तक्रारींना वॉर्ड नव्हता. लिहिलेल्या ठिकाणावरून (मराठी नावांसह) इथे जोडल्या${g ? `, आणखी ${g} GPS वरून` : ''}.`,
+    tide: 'मोठ्या भरतीत इथले नाले तुंबतात', tideReopen: (n: number) => `${n} दुरुस्ती मोठ्या भरतीनंतर उखडली`,
     contractorNote: 'संदर्भासह वाचा: मुसळधार पावसातील कामे आणि पूर धोका यामुळे योग्य अपयश दर बदलतो.',
     cols: ['कंत्राटदार', 'कामे', '30 दिवसांत अपयशी', 'मुदत चुकली', 'दराच्या तुलनेत खर्च', 'मुसळधार पावसातील कामे'],
   },
@@ -411,7 +415,7 @@ export default function WardDesk() {
                     {fs.map((x) => <span key={x.type} className={`wd-tag ${x.type}`}>{t.types[x.type]} · {inr(lang, x.amount)}</span>)}
                     <span className="wd-amt">{inr(lang, amount)}</span>
                   </div>
-                  <small>{f.roadName} ({f.road}) · {f.contractor} · {method(lang, f.method)} · {f.date}{f.heavyRainWeek ? ' · 🌧' : ''}</small>
+                  <small>{f.roadName} ({f.road}) · {f.contractor} · {method(lang, f.method)} · {f.date}{f.heavyRainWeek ? ' · 🌧' : ''}{f.bigTide ? ' · 🌊' : ''}</small>
                   <AgentText l={lineFor(a?.auditor, f.wo)} lang={lang} />
                 </li>
               )
@@ -423,6 +427,7 @@ export default function WardDesk() {
       {tab === 4 && (
         <section>
           <AgentText l={a?.triage?.summary} lang={lang} />
+          {w.placed.typed + w.placed.gps > 0 && <p className="wd-note">{t.placed(w.placed.typed, w.placed.gps)}</p>}
           {([
             [t.misfiled, w.complaints.misfiled, w.complaints.misfiledExamples],
             [t.bounced, w.complaints.bounced, w.complaints.bouncedExamples],
@@ -467,6 +472,7 @@ export default function WardDesk() {
                 <small>
                   {method(lang, r.method)} · {r.reopens}× reopened · {r.accidents} accidents{r.fatal ? ` (${r.fatal} fatal)` : ''}
                   {r.hospitals.length ? ` · 🏥 ${r.hospitals.join(', ')}` : ''}{r.floodSpots.length ? ` · 🌊 ${r.floodSpots.join(', ')}` : ''}
+                  {r.tideSpots.length ? ` · 🌕 ${t.tide}` : ''}{r.tideReopens ? ` · ${t.tideReopen(r.tideReopens)}` : ''}
                   {r.busRoute ? ' · 🚌' : ''} · {inr(lang, r.spent)} spent so far
                 </small>
                 <AgentText l={lineFor(a?.planner, r.road)} lang={lang} />
