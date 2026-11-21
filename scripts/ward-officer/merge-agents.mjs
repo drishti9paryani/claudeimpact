@@ -7,7 +7,7 @@ import assert from 'node:assert'
 // Every ₹ figure in a line, in rupees. Handles "₹2.3 lakh", "₹1.2 crore", "₹23,000", "Rs 5 lakh".
 export function rupees(text) {
   const out = []
-  for (const m of text.matchAll(/(?:₹|Rs\.?\s?)\s?(-?[\d,]+(?:\.\d+)?)\s*(lakh|crore|cr|L)?/gi)) {
+  for (const m of text.matchAll(/(?:₹|Rs\.?\s?)\s?(-?[\d,]+(?:\.\d+)?)(?:\s*(lakh|crore|cr|L)\b)?/gi)) {
     const n = Number(m[1].replace(/,/g, ''))
     const unit = (m[2] || '').toLowerCase()
     out.push(Math.round(n * (unit === 'lakh' || unit === 'l' ? 1e5 : unit === 'crore' || unit === 'cr' ? 1e7 : 1)))
@@ -15,6 +15,7 @@ export function rupees(text) {
   return out
 }
 assert.deepStrictEqual(rupees('₹2.3 lakh and ₹1,200 and Rs 1.5 crore'), [230000, 1200, 15000000])
+assert.deepStrictEqual(rupees('₹88,512, Lady Jamshedji Road'), [88512])
 
 // English money units left inside Marathi text -> Marathi words.
 export const marathiUnits = (s) => s.replace(/\b(lakhs?|lacs?|L)\b/g, 'लाख').replace(/\b(crores?|Cr)\b/gi, 'कोटी')
