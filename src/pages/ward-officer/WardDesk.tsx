@@ -16,7 +16,7 @@ const T = {
     loading: 'Loading…', noAgent: 'Agent notes not generated yet. Numbers below come straight from the data.',
     misfiled: 'Photo shows a pothole, filed as something else', bounced: 'Pothole complaints bounced or closed', open: 'Oldest still open',
     placed: (n: number, g: number) => `${n} complaints had no ward. Placed here from the typed locality (incl. Marathi spellings)${g ? `, ${g} more from GPS` : ''}.`,
-    tide: 'big tides block drains here', tideReopen: (n: number) => `${n} patch failed after a big-tide day`,
+    placedH: 'Had no ward in the system, placed here, still open', tide: 'big tides block drains here', tideReopen: (n: number) => `${n} patch failed after a big-tide day`,
     contractorNote: 'Read with context: heavy-rain share and flood risk change what a fair reopen rate looks like.',
     cols: ['Contractor', 'Jobs', 'Failed in 30 days', 'Missed deadline', 'Cost vs rate', 'Heavy-rain jobs'],
   },
@@ -32,7 +32,7 @@ const T = {
     loading: 'लोड होत आहे…', noAgent: 'एजंटच्या नोंदी अजून तयार नाहीत. खालील आकडे थेट डेटामधून आहेत.',
     misfiled: 'फोटोत खड्डा, पण दुसऱ्या प्रकारात नोंद', bounced: 'परत पाठवलेल्या / बंद केलेल्या खड्डा तक्रारी', open: 'सर्वात जुन्या उघड्या तक्रारी',
     placed: (n: number, g: number) => `${n} तक्रारींना वॉर्ड नव्हता. लिहिलेल्या ठिकाणावरून (मराठी नावांसह) इथे जोडल्या${g ? `, आणखी ${g} GPS वरून` : ''}.`,
-    tide: 'मोठ्या भरतीत इथले नाले तुंबतात', tideReopen: (n: number) => `${n} दुरुस्ती मोठ्या भरतीनंतर उखडली`,
+    placedH: 'प्रणालीत वॉर्ड नव्हता, इथे जोडल्या, अजून उघड्या', tide: 'मोठ्या भरतीत इथले नाले तुंबतात', tideReopen: (n: number) => `${n} दुरुस्ती मोठ्या भरतीनंतर उखडली`,
     contractorNote: 'संदर्भासह वाचा: मुसळधार पावसातील कामे आणि पूर धोका यामुळे योग्य अपयश दर बदलतो.',
     cols: ['कंत्राटदार', 'कामे', '30 दिवसांत अपयशी', 'मुदत चुकली', 'दराच्या तुलनेत खर्च', 'मुसळधार पावसातील कामे'],
   },
@@ -106,6 +106,12 @@ const ACT = {
     approve: 'Approve & send', dismiss: 'No issue', steps: ['Review', 'Decide', 'Sent automatically'], outbox: 'Outbox', pending: 'to decide', sentTo: 'Sent to', corpTo: 'Corporator(s), ward', corpSubj: 'Daily ward update', corpWait: 'Corporator update sends itself when all actions are decided', simNote: 'Demo: messages are simulated. In use they would go through the BMC email/SMS gateway.', empty: 'Nothing sent yet. Approve an action above.', summary: 'This morning',
     cz: { notFixedH: 'Citizens say "not fixed"', notFixedSub: 'After each repair the citizen gets an SMS: Fixed? Yes / No. These said No (repair reopened within 30 days).', reopen: 'Reopen job + flag contractor', reopened: 'Job reopened, contractor flagged', inboxH: 'Smart inbox: complaints grouped into issues', inboxSub: 'Claude groups complaints about the same problem at the same place, across app, helpline, web and languages.', complaints: 'complaints', merge: 'Merge into 1 issue + 1 work order', merged: 'Merged: 1 work order, all complainants told', journeyH: 'Complaint journey and deadline', journeySub: 'Every complaint shows where it is stuck. Overdue ones can be escalated.', received: 'Received', assigned: 'Assigned', due: 'Due', overdue: 'days overdue', escalate: 'Escalate to Deputy Commissioner', escalated: 'Escalated, citizen told the new date', handoffH: 'Not our road: hand off, don\'t reject', handoffSub: 'Instead of a silent rejection, the complaint is forwarded with a letter and the citizen is told who owns the road.', forward: 'Forward with letter + tell citizen', forwarded: 'Forwarded, citizen told who owns it', ofTotal: 'of', upv: 'upvotes', sms: 'SMS to citizen' },
     signout: 'Sign out', reset: 'Reset demo', hello: 'Signed in as', progress: 'done today', held: 'claimed or on hold', citizens: 'citizens updated',
+    as: 'Sign in as', roles: { officer: 'Ward Officer (AMC)', engineer: 'Sub-engineer', commissioner: 'Commissioner (city)' },
+    roleNote: { officer: 'Decides, holds payments, recovers money, assigns field work.', engineer: 'Inspects and fixes what the ward officer assigns, reports back.', commissioner: 'Sees every ward at a glance.' },
+    assign: 'Assign to sub-engineer', assigned: 'With sub-engineer', reported: 'Sub-engineer reported', fixed: 'fixed', notFixed: 'not fixed, needs a bigger repair',
+    myJobs: 'My jobs from the ward officer', noJobs: 'Nothing assigned yet. The ward officer assigns field work from the Today page.',
+    repFixed: 'Inspected: fixed', repNot: 'Inspected: not fixed', citySms: 'Your complaint was inspected and fixed',
+    cityH: 'All wards', cityCols: ['Ward', 'Payments to check', 'Open complaints', 'Missed deadline', 'Failed in 30 days', 'Today decided'],
   },
   mr: {
     warranty: ['मूळ कंत्राटदाराला नोटीस पाठवा', 'नोटीस पाठवली: दावा केला'],
@@ -118,6 +124,12 @@ const ACT = {
     approve: 'मंजूर करा व पाठवा', dismiss: 'अडचण नाही', steps: ['पाहा', 'निर्णय', 'आपोआप पाठवले'], outbox: 'पाठवलेले', pending: 'निर्णय बाकी', sentTo: 'पाठवले:', corpTo: 'नगरसेवक, वॉर्ड', corpSubj: 'दैनिक वॉर्ड अहवाल', corpWait: 'सर्व कामांवर निर्णय झाल्यावर नगरसेवकांना अहवाल आपोआप जाईल', simNote: 'डेमो: संदेश प्रत्यक्ष पाठवले जात नाहीत. वापरात ते BMC ईमेल/SMS प्रणालीतून जातील.', empty: 'अजून काही पाठवले नाही. वरील काम मंजूर करा.', summary: 'आज सकाळी',
     cz: { notFixedH: 'नागरिक म्हणतात "दुरुस्त झाले नाही"', notFixedSub: 'प्रत्येक दुरुस्तीनंतर नागरिकाला SMS: दुरुस्त झाले? हो / नाही. यांनी नाही म्हटले (30 दिवसांत पुन्हा उघडले).', reopen: 'काम पुन्हा उघडा + कंत्राटदार नोंद', reopened: 'काम पुन्हा उघडले, कंत्राटदाराची नोंद', inboxH: 'स्मार्ट इनबॉक्स: तक्रारी एका मुद्द्यात', inboxSub: 'एकाच जागी एकाच अडचणीच्या तक्रारी (ॲप, हेल्पलाइन, वेब, सर्व भाषा) Claude एकत्र करते.', complaints: 'तक्रारी', merge: '1 मुद्दा + 1 काम आदेश करा', merged: 'एकत्र केले: 1 काम आदेश, सर्व तक्रारदारांना कळवले', journeyH: 'तक्रारीचा प्रवास व मुदत', journeySub: 'प्रत्येक तक्रार कुठे अडली ते दिसते. मुदत संपलेल्या वर नेता येतात.', received: 'मिळाली', assigned: 'नेमली', due: 'मुदत', overdue: 'दिवस उशीर', escalate: 'उपायुक्तांकडे पाठवा', escalated: 'वर पाठवले, नागरिकाला नवी तारीख कळवली', handoffH: 'आमचा रस्ता नाही: नाकारू नका, सुपूर्द करा', handoffSub: 'शांतपणे नाकारण्याऐवजी पत्रासह पुढे पाठवा आणि रस्ता कोणाचा ते नागरिकाला सांगा.', forward: 'पत्रासह पाठवा + नागरिकाला कळवा', forwarded: 'पाठवले, नागरिकाला मालक कळवला', ofTotal: 'पैकी', upv: 'अपवोट', sms: 'नागरिकाला SMS' },
     signout: 'साइन आउट', reset: 'डेमो रीसेट', hello: 'साइन इन:', progress: 'आज पूर्ण', held: 'दावा केले / थांबवले', citizens: 'नागरिकांना कळवले',
+    as: 'यांच्या रूपात साइन इन', roles: { officer: 'वॉर्ड अधिकारी (सहाय्यक आयुक्त)', engineer: 'उप-अभियंता', commissioner: 'आयुक्त (शहर)' },
+    roleNote: { officer: 'निर्णय घेतात, पेमेंट थांबवतात, पैसे वसूल करतात, फील्ड काम नेमतात.', engineer: 'वॉर्ड अधिकाऱ्यांनी नेमलेली पाहणी व दुरुस्ती करतात, अहवाल देतात.', commissioner: 'सर्व वॉर्ड एका नजरेत.' },
+    assign: 'उप-अभियंत्याला नेमा', assigned: 'उप-अभियंत्याकडे', reported: 'उप-अभियंत्याचा अहवाल', fixed: 'दुरुस्त', notFixed: 'दुरुस्त नाही, मोठी दुरुस्ती हवी',
+    myJobs: 'वॉर्ड अधिकाऱ्यांनी नेमलेली माझी कामे', noJobs: 'अजून काही नेमले नाही. वॉर्ड अधिकारी "आज" पानावरून फील्ड काम नेमतात.',
+    repFixed: 'पाहणी: दुरुस्त', repNot: 'पाहणी: दुरुस्त नाही', citySms: 'तुमच्या तक्रारीची पाहणी झाली, दुरुस्त झाले',
+    cityH: 'सर्व वॉर्ड', cityCols: ['वॉर्ड', 'तपासायची देयके', 'उघड्या तक्रारी', 'मुदत चुकली', '30 दिवसांत अपयशी', 'आज निर्णय'],
   },
 }
 
@@ -142,6 +154,11 @@ function messagesFor(a: Act, text: string, lang: Lang): Msg[] {
   return M[a.kind]
 }
 
+type Role = 'officer' | 'engineer' | 'commissioner'
+const ROLES: Role[] = ['officer', 'engineer', 'commissioner']
+const FIELD: ActKind[] = ['repeat', 'crew'] // field work a sub-engineer can take
+const approved = (st?: string) => !!st && /^\d\d:\d\d$/.test(st)
+const now = () => new Date().toTimeString().slice(0, 5)
 const pct = (x: number) => `${Math.round(x * 100)}%`
 const base = import.meta.env.BASE_URL
 const confirmReset = () => true // demo: reset without a blocking dialog
@@ -180,7 +197,7 @@ export default function WardDesk() {
   const [code, setCode] = useState(() => localStorage.getItem('wd-ward') ?? 'F/N')
   const [lang, setLang] = useState<Lang>(() => (localStorage.getItem('wd-lang') as Lang) ?? 'en')
   const [tab, setTab] = useState(0)
-  const [officer, setOfficer] = useState<{ name: string; ward: string } | null>(() => JSON.parse(localStorage.getItem('wd-officer') ?? 'null'))
+  const [officer, setOfficer] = useState<{ name: string; ward: string; role?: Role } | null>(() => JSON.parse(localStorage.getItem('wd-officer') ?? 'null'))
   const [loginName, setLoginName] = useState('')
   const [done, setDone] = useState<Record<string, string>>(() => JSON.parse(localStorage.getItem('wd-done') ?? '{}'))
   useEffect(() => localStorage.setItem('wd-done', JSON.stringify(done)), [done])
@@ -210,7 +227,15 @@ export default function WardDesk() {
             {facts.wards.map((x) => <option key={x.code} value={x.code}>{x.code}: {x.name}</option>)}
           </select>
         </label>
-        <button className="wd-btn" onClick={() => { const o = { name: loginName.trim() || 'Ward Officer', ward: code }; setTab(0); localStorage.setItem('wd-officer', JSON.stringify(o)); setOfficer(o) }}>{L.go}</button>
+        <p><b>{L.as}</b></p>
+        <ul className="wd-list">
+          {ROLES.map((r) => (
+            <li key={r}>
+              <button className="wd-btn" onClick={() => { const o = { name: loginName.trim(), ward: code, role: r }; setTab(0); localStorage.setItem('wd-officer', JSON.stringify(o)); setOfficer(o) }}>{L.roles[r]}</button>
+              <small> {L.roleNote[r]}</small>
+            </li>
+          ))}
+        </ul>
         <p className="wd-note">{L.demoNote}</p>
       </div>
     )
@@ -218,25 +243,93 @@ export default function WardDesk() {
   const acts = actionMeta(w)
   const status = (a: Act) => done[w.code + '|' + a.key]
   const setStatus = (a: Act, v?: string) => setDone((d) => { const n = { ...d }; if (v) n[w.code + '|' + a.key] = v; else delete n[w.code + '|' + a.key]; return n })
-  const claimed = acts.filter((a) => status(a) && status(a) !== 'ok').reduce((s2, a) => s2 + a.amount, 0)
-  const informed = acts.filter((a) => a.citizen && status(a) && status(a) !== 'ok').length
+  const claimed = acts.filter((a) => approved(status(a))).reduce((s2, a) => s2 + a.amount, 0)
+  const informed = acts.filter((a) => a.citizen && (approved(status(a)) || status(a)?.startsWith('rep:fixed'))).length
+  const role: Role = officer.role ?? 'officer'
 
-  return (
-    <div className="wd" lang={lang === 'mr' ? 'mr' : 'en'}>
+  const head = (
+    <>
       <div className="wd-who">
-        <span>{L.hello} <b>{officer.name}</b> · {w.code}</span>
+        <span>{L.hello} <b>{officer.name || L.roles[role]}</b>{officer.name ? ` · ${L.roles[role]}` : ''}{role !== 'commissioner' ? ` · ${w.code}` : ''}</span>
         <button onClick={() => { if (confirmReset()) setDone({}) }}>{L.reset}</button>
         <button onClick={() => { localStorage.removeItem('wd-officer'); setOfficer(null) }}>{L.signout}</button>
       </div>
       <div className="wd-top">
-        <b className="wd-wardname">{w.code}: {w.name}</b>
+        <b className="wd-wardname">{role === 'commissioner' ? L.cityH : `${w.code}: ${w.name}`}</b>
         <div className="wd-lang" role="group" aria-label="Language">
           <button aria-pressed={lang === 'en'} onClick={() => setLang('en')}>English</button>
           <button aria-pressed={lang === 'mr'} onClick={() => setLang('mr')}>मराठी</button>
         </div>
       </div>
-
       <p className="wd-note">{t.synthetic} · {t.asOf}</p>
+    </>
+  )
+
+  if (role === 'engineer') {
+    const texts = todayActions(w, lang)
+    const mine = acts.map((x, i) => [x, texts[i]] as const).filter(([x]) => status(x) === 'asg' || status(x)?.startsWith('rep:'))
+    return (
+      <div className="wd" lang={lang === 'mr' ? 'mr' : 'en'}>
+        {head}
+        <h2>{L.myJobs}</h2>
+        {mine.length === 0 ? <p className="wd-note">{L.noJobs}</p> : (
+          <ol className="wd-cards">
+            {mine.map(([x, text]) => {
+              const st = status(x)!
+              return (
+                <li key={x.key} className={st === 'asg' ? '' : 'done'}>
+                  <p>{text}</p>
+                  {st === 'asg' ? (
+                    <div className="wd-act">
+                      <button className="wd-btn" onClick={() => setStatus(x, 'rep:fixed:' + now())}>{L.repFixed}</button>
+                      <button className="wd-btn ghost" onClick={() => setStatus(x, 'rep:notfixed:' + now())}>{L.repNot}</button>
+                    </div>
+                  ) : (
+                    <div className="wd-act">
+                      <span className="wd-qc ok">✓ {st.startsWith('rep:fixed') ? L.repFixed : L.repNot} · {st.slice(-5)}</span>
+                      <button className="wd-link" onClick={() => setStatus(x, 'asg')}>{L.undo}</button>
+                    </div>
+                  )}
+                </li>
+              )
+            })}
+          </ol>
+        )}
+      </div>
+    )
+  }
+
+  if (role === 'commissioner') {
+    return (
+      <div className="wd" lang={lang === 'mr' ? 'mr' : 'en'}>
+        {head}
+        <div className="wd-table-wrap">
+          <table className="wd-table">
+            <thead><tr>{L.cityCols.map((c) => <th key={c}>{c}</th>)}</tr></thead>
+            <tbody>
+              {[...facts.wards].sort((x, y) => y.shouldHavePaid.total - x.shouldHavePaid.total).map((x) => {
+                const xa = actionMeta(x)
+                return (
+                  <tr key={x.code}>
+                    <td><b>{x.code}</b> {x.name}</td>
+                    <td>{inr(lang, x.shouldHavePaid.total)}</td>
+                    <td>{x.complaints.open}</td>
+                    <td>{pct(x.slaMissRate)}</td>
+                    <td>{pct(x.reopenRate)}</td>
+                    <td>{xa.filter((y) => done[x.code + '|' + y.key]).length}/{xa.length}</td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="wd" lang={lang === 'mr' ? 'mr' : 'en'}>
+      {head}
 
       <div className="wd-stats">
         <div><span>{t.budget}</span><b>{inr(lang, w.budget)}</b></div>
@@ -259,7 +352,7 @@ export default function WardDesk() {
       {tab === 0 && (() => {
         const texts = todayActions(w, lang)
         const decided = acts.filter(status).length
-        const outbox = acts.flatMap((x, i) => (status(x) && status(x) !== 'ok' ? messagesFor(x, texts[i], lang).map((m) => ({ ...m, at: status(x) })) : []))
+        const outbox = acts.flatMap((x, i) => (approved(status(x)) ? messagesFor(x, texts[i], lang).map((m) => ({ ...m, at: status(x)! })) : status(x)?.startsWith('rep:fixed') && x.citizen ? [{ ch: 'sms' as const, to: (lang === 'mr' ? 'नागरिक, तक्रार ' : 'Citizen, complaint ') + x.citizen, subject: L.citySms, at: status(x)!.slice(-5) }] : []))
         const corp = a?.brief?.corporator
         if (decided === acts.length && acts.length && corp?.qc1) outbox.push({ ch: 'email', to: `${L.corpTo} ${w.code}`, subject: `${L.corpSubj}: ${corp[lang].slice(0, 90)}…`, at: '' })
         return (
@@ -281,14 +374,15 @@ export default function WardDesk() {
                     <p>{x}</p>
                     {act && !st && (
                       <div className="wd-act">
-                        <button className="wd-btn" onClick={() => setStatus(act, new Date().toTimeString().slice(0, 5))}>{L.approve}</button>
+                        <button className="wd-btn" onClick={() => setStatus(act, now())}>{L.approve}</button>
+                        {FIELD.includes(act.kind) && <button className="wd-btn ghost" onClick={() => setStatus(act, 'asg')}>{L.assign}</button>}
                         <button className="wd-btn ghost" onClick={() => setStatus(act, 'ok')}>{L.dismiss}</button>
                       </div>
                     )}
                     {act && st && (
                       <div className="wd-act">
-                        <span className="wd-qc ok">✓ {st === 'ok' ? L.ok : L[act.kind][1]}</span>
-                        {st !== 'ok' && messagesFor(act, x, lang).map((m) => <small key={m.to} className="wd-cit">{m.ch === 'sms' ? '📱' : '✉'} {L.sentTo} {m.to}</small>)}
+                        <span className={st === 'asg' || st.startsWith('rep:notfixed') ? 'wd-qc warn' : 'wd-qc ok'}>{st === 'ok' ? '✓ ' + L.ok : st === 'asg' ? '⏳ ' + L.assigned : st.startsWith('rep:') ? `${L.reported}: ${st.startsWith('rep:fixed') ? L.fixed : L.notFixed} · ${st.slice(-5)}` : '✓ ' + L[act.kind][1]}</span>
+                        {approved(st) && messagesFor(act, x, lang).map((m) => <small key={m.to} className="wd-cit">{m.ch === 'sms' ? '📱' : '✉'} {L.sentTo} {m.to}</small>)}
                         <button className="wd-link" onClick={() => setStatus(act)}>{L.undo}</button>
                       </div>
                     )}
@@ -432,6 +526,7 @@ export default function WardDesk() {
             [t.misfiled, w.complaints.misfiled, w.complaints.misfiledExamples],
             [t.bounced, w.complaints.bounced, w.complaints.bouncedExamples],
             [t.open, w.complaints.open, w.complaints.oldestOpen],
+            [t.placedH, w.placed.typed + w.placed.gps, w.placed.open],
           ] as const).map(([title, n, list]) => (
             <div key={title}>
               <h2>{title}: {n}</h2>

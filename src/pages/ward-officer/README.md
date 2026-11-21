@@ -3,6 +3,13 @@
 A one-screen morning desk for a BMC ward officer (Assistant Municipal Commissioner), built on the
 Claude Impact Lab "Follow the Rupee" dataset (synthetic, not real BMC data).
 
+## Accounts (demo sign-in, one tap)
+| Role | Sees | Does |
+|---|---|---|
+| Ward Officer (AMC) | Full desk for their ward | Approves, holds payments, recovers money, assigns field cards to the sub-engineer |
+| Sub-engineer | Only cards assigned to them | Reports "Inspected: fixed / not fixed"; a fixed report SMSes the citizen |
+| Commissioner (city) | All 24 wards in one table | Reads: payments to check, open complaints, missed deadlines, decided today |
+
 ## What it shows
 | Tab | What | Built by |
 |---|---|---|

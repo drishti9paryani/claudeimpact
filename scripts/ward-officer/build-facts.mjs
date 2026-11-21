@@ -164,10 +164,11 @@ for (const c of comps) {
     const near = locs.map((x) => [hav(num(c.lat), num(c.lon), num(x.lat), num(x.lon)), x]).sort((a, b) => a[0] - b[0])[0]
     if (near && near[0] < 1500) { l = near[1]; how = 'GPS' }
   }
-  if (l) { c.ward_code = l.ward_code; c.placedBy = how; (placed[l.ward_code] ??= { typed: 0, gps: 0 })[how === 'GPS' ? 'gps' : 'typed']++ }
+  // Kept apart from the ward's own counts: the system had no ward for these, and the agent text quotes those counts.
+  if (l) (placed[l.ward_code] ??= []).push({ ...c, placedBy: how })
 }
-const blank = comps.filter((c) => !c.placedBy && !c.ward_code).length
-console.log('blank-ward complaints placed:', Object.values(placed).reduce((s, p) => s + p.typed + p.gps, 0), 'still unplaced:', blank)
+const nPlaced = Object.values(placed).flat().length
+console.log('blank-ward complaints placed:', nPlaced, 'still unplaced:', comps.filter((c) => !c.ward_code).length - nPlaced)
 const out = { generatedFrom: 'Claude-Impact-Labs-data-2 (synthetic)', overbillRatio: OVERBILL_RATIO, wards: [] }
 for (const wd of wards) {
   const code = wd.ward_code
@@ -220,7 +221,7 @@ for (const wd of wards) {
     flags: wf.sort((a, b) => b.amount - a.amount),
     citizens: citizenView(wc, jobs),
     repeats: { count: repeats.length, examples: repeats.sort((a, b) => a.days - b.days) },
-    placed: placed[code] ?? { typed: 0, gps: 0 },
+    placed: { typed: (placed[code] ?? []).filter((c) => c.placedBy !== 'GPS').length, gps: (placed[code] ?? []).filter((c) => c.placedBy === 'GPS').length, open: (placed[code] ?? []).filter((c) => c.status === 'Open' || c.status === 'In Progress').map((c) => ({ ...pick(c), placedBy: c.placedBy })).slice(0, 5) },
     complaints: { total: wc.length, open: open.length, misfiled: misfiled.length, bounced: bounced.length, oldestOpen: open.slice(0, 5).map(pick), misfiledExamples: misfiled.slice(0, 5).map(pick), bouncedExamples: bounced.slice(0, 5).map(pick) },
     contractors: Object.values(contractors).map((c) => ({ name: c.name, jobs: c.jobs, reopenRate: +(c.reopened / c.jobs).toFixed(2), slaMissRate: +(c.slaMissed / c.jobs).toFixed(2), avgCostVsRate: c.ratioN ? +(c.costRatioSum / c.ratioN).toFixed(2) : null, heavyRainShare: +(c.heavyRainJobs / c.jobs).toFixed(2) })).sort((a, b) => b.jobs - a.jobs),
     nextRupee: roadsHere.slice(0, 8),

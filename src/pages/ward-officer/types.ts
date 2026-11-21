@@ -79,7 +79,7 @@ export type Ward = {
     handoffCount: number
   }
   repeats: { count: number; examples: { closed: string; closedAt: string; again: string; againAt: string; kind: "road" | "water" | "manhole" | "other"; metres: number; locality: string; text: string; days: number }[] }
-  placed: { typed: number; gps: number }
+  placed: { typed: number; gps: number; open: (Complaint & { placedBy: string })[] }
   complaints: {
     total: number
     open: number

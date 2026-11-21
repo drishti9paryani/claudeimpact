@@ -8,8 +8,9 @@ All data is the event's synthetic data. Messages are simulated (the screen says 
 ---
 
 ## Page 1 · Sign in · 10 sec · `01-sign-in.png`
-**Click:** type **A. Patil**, pick **F/N**, press **Sign in**.
-**Say:** "I'm the ward officer for Matunga, Sion and Wadala. Every morning I have 53 open complaints, 6 crews and a monsoon budget to protect."
+**Click:** type **A. Patil**, pick **F/N**, press **Ward Officer (AMC)**.
+**Point at:** the 3 roles. "Three accounts: I decide, my sub-engineer does the field check, the Commissioner sees every ward."
+**Say:** "I'm the ward officer for Matunga, Sion and Wadala. Every morning I have 50 open complaints, 6 crews and a monsoon budget to protect."
 
 ## Page 2 · Today: review · 20 sec · `02-today-before.png`
 **Point at:** the 5 top cards, then "This morning".
@@ -21,11 +22,17 @@ All data is the event's synthetic data. Messages are simulated (the screen says 
 **Click:** **Approve & send** on card 1.
 **Say:** "This road is still under warranty. The original builder should fix it free, but we paid ₹1.2 lakh. Approve, and the notice goes to the contractor through the Roads Department."
 **Click:** **Approve & send** on card 2. "Billed 2.24 times the standard rate. Payment is on hold until the engineer explains."
-**Click:** **Approve & send** on card 3. "This pothole was marked fixed and came back 3 days later. Re-inspection is ordered, and **the citizen gets an SMS**."
+**Click:** **Assign to sub-engineer** on card 3. "This pothole was marked fixed and came back 3 days later. Field work goes to my sub-engineer, not into a WhatsApp forward."
 **Click:** **No issue** on card 4. "I'm still in charge. If something is fine, I say so."
 **Click:** **Approve & send** on card 5.
 **Point at:** the progress bar (5/5 done · ₹2.5 L claimed or on hold), then scroll to the **Outbox**.
 **Say:** "Every message went to the right person. Once all five were decided, **my corporator got the daily update automatically**. No copy-paste, no WhatsApp forwarding."
+
+## Page 3b · Sub-engineer reports back · 20 sec · `03b-sub-engineer.png`
+**Click:** **Sign out**, then **Sub-engineer**.
+**Say:** "This is my sub-engineer's account. They see only the jobs I gave them." **Click** **Inspected: fixed**.
+**Click:** **Sign out**, then **Ward Officer (AMC)**.
+**Point at:** card 3 ("Sub-engineer reported: fixed") and the Outbox SMS. "The report comes straight back to me, and **the citizen gets an SMS** that it's fixed."
 
 ## Page 4 · Citizens · 40 sec · `04-citizens.png`
 **Click:** the **Citizens** tab.
@@ -54,7 +61,12 @@ All data is the event's synthetic data. Messages are simulated (the screen says 
 ## Page 10 · Why this · 15 sec · `10-why-this.png`
 **Say:** "Built on research from four sides: officials, officers, citizens and critics. We took apart 18 complaint portals, and argued against our own design."
 
-## Page 11 · Marathi · 10 sec · `11-marathi.png`
+## Page 11 · Commissioner · 15 sec · `11-commissioner.png`
+**Click:** **Sign out**, then **Commissioner (city)**.
+**Say:** "The Commissioner sees all 24 wards: payments to check, open complaints, missed deadlines, and who has decided today. F/N shows my 5 of 5."
+**Click:** **Sign out**, then **Ward Officer (AMC)**.
+
+## Page 12 · Marathi · 10 sec · `12-marathi.png`
 **Click:** **मराठी**.
 **Say:** "And it works in the officer's own language."
 
@@ -72,4 +84,5 @@ All data is the event's synthetic data. Messages are simulated (the screen says 
 - **Is the data real?** No. It's the event's synthetic dataset, and the screen says so.
 - **Are messages really sent?** Not in the demo. In real use they would go through the BMC email/SMS gateway.
 - **The citizens' "No" answers?** They're worked out from repairs that broke again within 30 days; the dataset has no real citizen replies.
+- **Who does what in real BMC?** News reports say a sub-engineer per electoral ward inspects and closes pothole jobs, and the Assistant Commissioner supervises them. Who signs which bill could not be confirmed, so the desk only lets the officer *hold* or *check* a payment.
 - **Is it accurate?** Every rupee figure is computed in code. AI lines that quote a number not in the data are held back (617 passed, 2 held back).
