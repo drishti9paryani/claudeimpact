@@ -1,6 +1,6 @@
 # Ward Desk: page-by-page demo (ward officer)
 
-**Total: about 3 minutes.** Live app: http://127.0.0.1:4317/#/ward-officer (or `npm run preview` in the project, then open `#/ward-officer`).
+**Total: about 4.5 minutes.** Live app: http://127.0.0.1:4317/#/ward-officer (or `npm run preview` in the project, then open `#/ward-officer`).
 **Before you go on stage:** press **Reset demo**, then **Sign out**, so the app starts at the sign-in page with 0/5 done.
 **Character:** you are the ward officer (Assistant Municipal Commissioner) of F/N ward: Matunga, Sion, Wadala. It is 7:30 am.
 All data is the event's synthetic data. Messages are simulated (the screen says so).
@@ -37,6 +37,10 @@ All data is the event's synthetic data. Messages are simulated (the screen says 
 **Click:** **Sign out**, then **Ward Officer (AMC)**.
 **Point at:** card 3 ("Sub-engineer reported: fixed") and the Outbox SMS. "The report comes straight back to me, and **the citizen gets an SMS** that it's fixed."
 
+## Page 3c · Close the day · 15 sec · `03c-close-the-day.png`
+**Scroll to:** **Close the day**. "At 6 pm I don't write a report. It's already here: what I decided, what carries over to tomorrow, money held, citizens told."
+**Click:** **Send day report to Deputy Commissioner**. "One tap, and it's in the outbox and in the log."
+
 ## Page 4 · Citizens · 40 sec · `04-citizens.png`
 **Click:** the **Citizens** tab.
 **Say (Smart inbox):** "Citizens complain on the app, on the helpline and on the web, in English, Marathi and Hinglish. Claude grouped **17 of those complaints into 1 Wadala pothole issue**." **Click** **Merge into 1 issue + 1 work order**. "One work order, and all 17 people are told."
@@ -66,7 +70,7 @@ All data is the event's synthetic data. Messages are simulated (the screen says 
 
 ## Page 11 · Commissioner · 15 sec · `11-commissioner.png`
 **Click:** **Sign out**, then **Commissioner (city)**.
-**Say:** "The Commissioner sees all 24 wards: payments to check, open complaints, missed deadlines, and who has decided today. F/N shows my 5 of 5."
+**Say:** "The Commissioner sees all 24 wards: payments to check, open complaints, missed deadlines, who has decided today, and whose day is closed. F/N shows my 5 of 5 and the time I sent my report."
 **Click:** **Sign out**, then **Ward Officer (AMC)**.
 
 ## Page 12 · Marathi · 10 sec · `12-marathi.png`

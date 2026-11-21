@@ -8,12 +8,12 @@ Claude Impact Lab "Follow the Rupee" dataset (synthetic, not real BMC data).
 |---|---|---|
 | Ward Officer (AMC) | Full desk for their ward | Approves, holds payments, recovers money, assigns field cards to the sub-engineer |
 | Sub-engineer | Only cards assigned to them | Reports "Inspected: fixed / not fixed"; a fixed report SMSes the citizen |
-| Commissioner (city) | All 24 wards in one table | Reads: payments to check, open complaints, missed deadlines, decided today |
+| Commissioner (city) | All 24 wards in one table | Reads: payments to check, open complaints, missed deadlines, decided today, day closed (time + carried over) |
 
 ## What it shows
 | Tab | What | Built by |
 |---|---|---|
-| Today | Due chips on hazard cards (24 h monsoon rule, High Court 48 h, days the complaint has waited), a Why? box, and a decision log (who, role, action, card, reason, time; undo adds an entry). 5 actions (recover warranty money, check a bill, re-inspect a repeat spot, refile a lost complaint, send a crew), WhatsApp copy, morning brief, corporator reply | Code + Brief agent |
+| Today | Close the day: decided, carried to tomorrow, ₹ held, citizens told; one tap sends the day report to the Deputy Commissioner. Due chips on hazard cards (24 h monsoon rule, High Court 48 h, days the complaint has waited), a Why? box, and a decision log (who, role, action, card, reason, time; undo adds an entry). 5 actions (recover warranty money, check a bill, re-inspect a repeat spot, refile a lost complaint, send a crew), WhatsApp copy, morning brief, corporator reply | Code + Brief agent |
 | Who should have paid | Warranty (DLP) roads (the original road contractor owes the repair, not the contractor BMC paid), bills over 1.4x the rate card, double bills (same road + method within 7 days, no complaint). Utility-trench remarks shown as "worth checking", not counted | Code + Auditor agent |
 | Fixed or just closed? | Resolved complaint followed by a new one within 50 m, 1 to 30 days later | Code |
 | Lost complaints | Pothole photo filed under another category, bounced / closed pothole complaints, oldest open. Complaints with no ward are placed from the typed locality (`localities.csv` names + aliases, whole-word, 99.9% agree on complaints that do have a ward) or GPS | Code + Triage agent |

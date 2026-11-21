@@ -112,8 +112,10 @@ const ACT = {
     myJobs: 'My jobs from the ward officer', noJobs: 'Nothing assigned yet. The ward officer assigns field work from the Today page.',
     repFixed: 'Inspected: fixed', repNot: 'Inspected: not fixed', citySms: 'Your complaint was inspected and fixed',
     due24: '24 h monsoon rule (High Court: 48 h)', waiting: (d: number) => `complaint waiting ${d} days`, why: 'Why? (saved in the log)',
-    logH: 'Decision log', logEmpty: 'No decisions yet.', logV: { approved: 'approved', ok: 'no issue', asg: 'assigned to sub-engineer', fixed: 'reported fixed', notfixed: 'reported not fixed', undo: 'undid' } as Record<string, string>,
-    cityH: 'All wards', cityCols: ['Ward', 'Payments to check', 'Open complaints', 'Missed deadline', 'Failed in 30 days', 'Today decided'],
+    logH: 'Decision log', logEmpty: 'No decisions yet.', logV: { eod: 'sent day report', approved: 'approved', ok: 'no issue', asg: 'assigned to sub-engineer', fixed: 'reported fixed', notfixed: 'reported not fixed', undo: 'undid' } as Record<string, string>,
+    cityH: 'All wards', cityCols: ['Ward', 'Payments to check', 'Open complaints', 'Missed deadline', 'Failed in 30 days', 'Today decided', 'Day closed'],
+    eodH: 'Close the day', eodDone: 'decided', eodCarry: 'carried to tomorrow', eodSend: 'Send day report to Deputy Commissioner', eodSent: 'Day report sent', eodTo: 'Deputy Municipal Commissioner (zone)',
+    eodSubj: (d: number, n: number, c: number, h: string) => `Ward day report: ${d}/${n} decided, ${c} carried over, ${h} held or claimed`, carried: 'carried',
   },
   mr: {
     warranty: ['मूळ कंत्राटदाराला नोटीस पाठवा', 'नोटीस पाठवली: दावा केला'],
@@ -132,8 +134,10 @@ const ACT = {
     myJobs: 'वॉर्ड अधिकाऱ्यांनी नेमलेली माझी कामे', noJobs: 'अजून काही नेमले नाही. वॉर्ड अधिकारी "आज" पानावरून फील्ड काम नेमतात.',
     repFixed: 'पाहणी: दुरुस्त', repNot: 'पाहणी: दुरुस्त नाही', citySms: 'तुमच्या तक्रारीची पाहणी झाली, दुरुस्त झाले',
     due24: 'पावसाळी नियम 24 तास (उच्च न्यायालय: 48 तास)', waiting: (d: number) => `तक्रार ${d} दिवस प्रलंबित`, why: 'का? (नोंदीत जतन)',
-    logH: 'निर्णय नोंद', logEmpty: 'अजून निर्णय नाही.', logV: { approved: 'मंजूर', ok: 'अडचण नाही', asg: 'उप-अभियंत्याला नेमले', fixed: 'दुरुस्त कळवले', notfixed: 'दुरुस्त नाही कळवले', undo: 'रद्द केले' } as Record<string, string>,
-    cityH: 'सर्व वॉर्ड', cityCols: ['वॉर्ड', 'तपासायची देयके', 'उघड्या तक्रारी', 'मुदत चुकली', '30 दिवसांत अपयशी', 'आज निर्णय'],
+    logH: 'निर्णय नोंद', logEmpty: 'अजून निर्णय नाही.', logV: { eod: 'दैनिक अहवाल पाठवला', approved: 'मंजूर', ok: 'अडचण नाही', asg: 'उप-अभियंत्याला नेमले', fixed: 'दुरुस्त कळवले', notfixed: 'दुरुस्त नाही कळवले', undo: 'रद्द केले' } as Record<string, string>,
+    cityH: 'सर्व वॉर्ड', cityCols: ['वॉर्ड', 'तपासायची देयके', 'उघड्या तक्रारी', 'मुदत चुकली', '30 दिवसांत अपयशी', 'आज निर्णय', 'दिवस बंद'],
+    eodH: 'दिवस बंद करा', eodDone: 'निर्णय झाले', eodCarry: 'उद्यावर', eodSend: 'उपायुक्तांना दैनिक अहवाल पाठवा', eodSent: 'दैनिक अहवाल पाठवला', eodTo: 'उप महापालिका आयुक्त (परिमंडळ)',
+    eodSubj: (d: number, n: number, c: number, h: string) => `वॉर्ड दैनिक अहवाल: ${d}/${n} निर्णय, ${c} उद्यावर, ${h} थांबवले/दावा`, carried: 'उद्यावर',
   },
 }
 
@@ -212,6 +216,8 @@ export default function WardDesk() {
   const [log, setLog] = useState<LogE[]>(() => JSON.parse(localStorage.getItem('wd-log') ?? '[]'))
   useEffect(() => localStorage.setItem('wd-log', JSON.stringify(log)), [log])
   const [why, setWhy] = useState<Record<string, string>>({})
+  const [eod, setEod] = useState<Record<string, { at: string; decided: number; of: number; carried: number; held: number; citizens: number }>>(() => JSON.parse(localStorage.getItem('wd-eod') ?? '{}'))
+  useEffect(() => localStorage.setItem('wd-eod', JSON.stringify(eod)), [eod])
 
   useEffect(() => {
     fetch(`${base}ward-officer/facts.json`).then((r) => r.json()).then(setFacts)
@@ -267,7 +273,7 @@ export default function WardDesk() {
     <>
       <div className="wd-who">
         <span>{L.hello} <b>{officer.name || L.roles[role]}</b>{officer.name ? ` · ${L.roles[role]}` : ''}{role !== 'commissioner' ? ` · ${w.code}` : ''}</span>
-        <button onClick={() => { if (confirmReset()) { setDone({}); setLog([]) } }}>{L.reset}</button>
+        <button onClick={() => { if (confirmReset()) { setDone({}); setLog([]); setEod({}) } }}>{L.reset}</button>
         <button onClick={() => { localStorage.removeItem('wd-officer'); setOfficer(null) }}>{L.signout}</button>
       </div>
       <div className="wd-top">
@@ -333,6 +339,7 @@ export default function WardDesk() {
                     <td>{pct(x.slaMissRate)}</td>
                     <td>{pct(x.reopenRate)}</td>
                     <td>{xa.filter((y) => done[x.code + '|' + y.key]).length}/{xa.length}</td>
+                    <td>{eod[x.code] ? `✓ ${eod[x.code].at} · ${eod[x.code].carried} ${L.carried}` : '—'}</td>
                   </tr>
                 )
               })}
@@ -370,6 +377,10 @@ export default function WardDesk() {
         const decided = acts.filter(status).length
         const outbox = acts.flatMap((x, i) => (approved(status(x)) ? messagesFor(x, texts[i], lang).map((m) => ({ ...m, at: status(x)! })) : status(x)?.startsWith('rep:fixed') && x.citizen ? [{ ch: 'sms' as const, to: (lang === 'mr' ? 'नागरिक, तक्रार ' : 'Citizen, complaint ') + x.citizen, subject: L.citySms, at: status(x)!.slice(-5) }] : []))
         const corp = a?.brief?.corporator
+        // Carried to tomorrow: not decided, still with the sub-engineer, or reported not fixed.
+        const carry = acts.map((x, i) => [x, texts[i]] as const).filter(([x]) => !status(x) || status(x) === 'asg' || status(x)!.startsWith('rep:notfixed'))
+        const day = eod[w.code]
+        if (day) outbox.push({ ch: 'email', to: L.eodTo, subject: L.eodSubj(day.decided, day.of, day.carried, inr(lang, day.held)), at: day.at })
         if (decided === acts.length && acts.length && corp?.qc1) outbox.push({ ch: 'email', to: `${L.corpTo} ${w.code}`, subject: `${L.corpSubj}: ${corp[lang].slice(0, 90)}…`, at: '' })
         return (
           <section>
@@ -421,11 +432,23 @@ export default function WardDesk() {
               </ul>
             )}
             {decided < acts.length && <p className="wd-note">{L.corpWait}</p>}
+            <h2>{L.eodH}</h2>
+            <div className="wd-summary">
+              <small><b>{decided}/{acts.length}</b> {L.eodDone} · <b>{carry.length}</b> {L.eodCarry} · <b>{inr(lang, claimed)}</b> {L.held} · <b>{informed}</b> {L.citizens}</small>
+              {carry.length > 0 && <ul>{carry.map(([x, text]) => <li key={x.key}><small>{text.split(':')[0]}{status(x) ? ` · ${status(x) === 'asg' ? L.assigned : L.notFixed}` : ''}</small></li>)}</ul>}
+              {day ? <div className="wd-act"><span className="wd-qc ok">✓ {L.eodSent} · {day.at}</span></div> : (
+                <div className="wd-act"><button className="wd-btn" onClick={() => {
+                  const at = now()
+                  setEod((e) => ({ ...e, [w.code]: { at, decided, of: acts.length, carried: carry.length, held: claimed, citizens: informed } }))
+                  write('eod:' + w.code, at)
+                }}>{L.eodSend}</button></div>
+              )}
+            </div>
             <h2>{L.logH}</h2>
             {log.filter((e) => e.ward === w.code).length === 0 ? <p className="wd-note">{L.logEmpty}</p> : (
               <ul className="wd-list wd-log">
                 {log.filter((e) => e.ward === w.code).slice().reverse().map((e, i) => (
-                  <li key={i}><small><b>{e.at}</b> · {e.who ? `${e.who} (${L.roles[e.role]})` : L.roles[e.role]} · {L.logV[logVerb(e.v)]} · {e.key.split(':').slice(1).join(':')}{e.reason ? ` · “${e.reason}”` : ''}</small></li>
+                  <li key={i}><small><b>{e.at}</b> · {e.who ? `${e.who} (${L.roles[e.role]})` : L.roles[e.role]} · {L.logV[e.key.startsWith('eod:') ? 'eod' : logVerb(e.v)]} · {e.key.split(':').slice(1).join(':')}{e.reason ? ` · “${e.reason}”` : ''}</small></li>
                 ))}
               </ul>
             )}
