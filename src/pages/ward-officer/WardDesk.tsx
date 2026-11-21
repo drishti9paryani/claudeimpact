@@ -106,6 +106,8 @@ const ACT = {
     approve: 'Approve & send', dismiss: 'No issue', steps: ['Review', 'Decide', 'Sent automatically'], outbox: 'Outbox', pending: 'to decide', sentTo: 'Sent to', corpTo: 'Corporator(s), ward', corpSubj: 'Daily ward update', corpWait: 'Corporator update sends itself when all actions are decided', simNote: 'Demo: messages are simulated. In use they would go through the BMC email/SMS gateway.', empty: 'Nothing sent yet. Approve an action above.', summary: 'This morning',
     cz: { notFixedH: 'Citizens say "not fixed"', notFixedSub: 'After each repair the citizen gets an SMS: Fixed? Yes / No. These said No (repair reopened within 30 days).', reopen: 'Reopen job + flag contractor', reopened: 'Job reopened, contractor flagged', inboxH: 'Smart inbox: complaints grouped into issues', inboxSub: 'Claude groups complaints about the same problem at the same place, across app, helpline, web and languages.', complaints: 'complaints', merge: 'Merge into 1 issue + 1 work order', merged: 'Merged: 1 work order, all complainants told', journeyH: 'Complaint journey and deadline', journeySub: 'Every complaint shows where it is stuck. Overdue ones can be escalated.', received: 'Received', assigned: 'Assigned', due: 'Due', overdue: 'days overdue', escalate: 'Escalate to Deputy Commissioner', escalated: 'Escalated, citizen told the new date', handoffH: 'Not our road: hand off, don\'t reject', handoffSub: 'Instead of a silent rejection, the complaint is forwarded with a letter and the citizen is told who owns the road.', forward: 'Forward with letter + tell citizen', forwarded: 'Forwarded, citizen told who owns it', ofTotal: 'of', upv: 'upvotes', sms: 'SMS to citizen' },
     signout: 'Sign out', reset: 'Reset demo', hello: 'Signed in as', progress: 'done today', held: 'claimed or on hold', citizens: 'citizens updated',
+    stTag: { todo: 'Not started', wip: 'With sub-engineer', done: 'Done' } as Record<string, string>,
+    tagline: 'One screen for the morning: what to decide, who to send, what to tell citizens.', icon: { officer: '◆', engineer: '▲', commissioner: '●' } as Record<string, string>,
     as: 'Sign in as', roles: { officer: 'Ward Officer (AMC)', engineer: 'Sub-engineer', commissioner: 'Commissioner (city)' },
     roleNote: { officer: 'Decides, holds payments, recovers money, assigns field work.', engineer: 'Inspects and fixes what the ward officer assigns, reports back.', commissioner: 'Sees every ward at a glance.' },
     assign: 'Assign to sub-engineer', assigned: 'With sub-engineer', reported: 'Sub-engineer reported', fixed: 'fixed', notFixed: 'not fixed, needs a bigger repair',
@@ -128,6 +130,8 @@ const ACT = {
     approve: 'मंजूर करा व पाठवा', dismiss: 'अडचण नाही', steps: ['पाहा', 'निर्णय', 'आपोआप पाठवले'], outbox: 'पाठवलेले', pending: 'निर्णय बाकी', sentTo: 'पाठवले:', corpTo: 'नगरसेवक, वॉर्ड', corpSubj: 'दैनिक वॉर्ड अहवाल', corpWait: 'सर्व कामांवर निर्णय झाल्यावर नगरसेवकांना अहवाल आपोआप जाईल', simNote: 'डेमो: संदेश प्रत्यक्ष पाठवले जात नाहीत. वापरात ते BMC ईमेल/SMS प्रणालीतून जातील.', empty: 'अजून काही पाठवले नाही. वरील काम मंजूर करा.', summary: 'आज सकाळी',
     cz: { notFixedH: 'नागरिक म्हणतात "दुरुस्त झाले नाही"', notFixedSub: 'प्रत्येक दुरुस्तीनंतर नागरिकाला SMS: दुरुस्त झाले? हो / नाही. यांनी नाही म्हटले (30 दिवसांत पुन्हा उघडले).', reopen: 'काम पुन्हा उघडा + कंत्राटदार नोंद', reopened: 'काम पुन्हा उघडले, कंत्राटदाराची नोंद', inboxH: 'स्मार्ट इनबॉक्स: तक्रारी एका मुद्द्यात', inboxSub: 'एकाच जागी एकाच अडचणीच्या तक्रारी (ॲप, हेल्पलाइन, वेब, सर्व भाषा) Claude एकत्र करते.', complaints: 'तक्रारी', merge: '1 मुद्दा + 1 काम आदेश करा', merged: 'एकत्र केले: 1 काम आदेश, सर्व तक्रारदारांना कळवले', journeyH: 'तक्रारीचा प्रवास व मुदत', journeySub: 'प्रत्येक तक्रार कुठे अडली ते दिसते. मुदत संपलेल्या वर नेता येतात.', received: 'मिळाली', assigned: 'नेमली', due: 'मुदत', overdue: 'दिवस उशीर', escalate: 'उपायुक्तांकडे पाठवा', escalated: 'वर पाठवले, नागरिकाला नवी तारीख कळवली', handoffH: 'आमचा रस्ता नाही: नाकारू नका, सुपूर्द करा', handoffSub: 'शांतपणे नाकारण्याऐवजी पत्रासह पुढे पाठवा आणि रस्ता कोणाचा ते नागरिकाला सांगा.', forward: 'पत्रासह पाठवा + नागरिकाला कळवा', forwarded: 'पाठवले, नागरिकाला मालक कळवला', ofTotal: 'पैकी', upv: 'अपवोट', sms: 'नागरिकाला SMS' },
     signout: 'साइन आउट', reset: 'डेमो रीसेट', hello: 'साइन इन:', progress: 'आज पूर्ण', held: 'दावा केले / थांबवले', citizens: 'नागरिकांना कळवले',
+    stTag: { todo: 'सुरू नाही', wip: 'उप-अभियंत्याकडे', done: 'पूर्ण' } as Record<string, string>,
+    tagline: 'सकाळसाठी एक स्क्रीन: काय ठरवायचे, कोणाला पाठवायचे, नागरिकांना काय सांगायचे.', icon: { officer: '◆', engineer: '▲', commissioner: '●' } as Record<string, string>,
     as: 'यांच्या रूपात साइन इन', roles: { officer: 'वॉर्ड अधिकारी (सहाय्यक आयुक्त)', engineer: 'उप-अभियंता', commissioner: 'आयुक्त (शहर)' },
     roleNote: { officer: 'निर्णय घेतात, पेमेंट थांबवतात, पैसे वसूल करतात, फील्ड काम नेमतात.', engineer: 'वॉर्ड अधिकाऱ्यांनी नेमलेली पाहणी व दुरुस्ती करतात, अहवाल देतात.', commissioner: 'सर्व वॉर्ड एका नजरेत.' },
     assign: 'उप-अभियंत्याला नेमा', assigned: 'उप-अभियंत्याकडे', reported: 'उप-अभियंत्याचा अहवाल', fixed: 'दुरुस्त', notFixed: 'दुरुस्त नाही, मोठी दुरुस्ती हवी',
@@ -236,24 +240,33 @@ export default function WardDesk() {
   const L = ACT[lang]
   if (!officer) {
     return (
-      <div className="wd wd-login">
-        <h2>{L.login}</h2>
-        <label>{L.name}<input value={loginName} onChange={(e) => setLoginName(e.target.value)} placeholder="e.g. A. Patil" /></label>
-        <label>{L.ward}
-          <select value={code} onChange={(e) => setCode(e.target.value)}>
-            {facts.wards.map((x) => <option key={x.code} value={x.code}>{x.code}: {x.name}</option>)}
-          </select>
-        </label>
-        <p><b>{L.as}</b></p>
-        <ul className="wd-list">
+      <div className="wd wd-login" lang={lang === 'mr' ? 'mr' : 'en'}>
+        <div className="wd-login-intro">
+          <p className="wd-kicker">Ward Desk · BMC</p>
+          <h1 className="wd-display">{L.login}</h1>
+          <p className="wd-lede">{L.tagline}</p>
+          <label>{L.name}<input value={loginName} onChange={(e) => setLoginName(e.target.value)} placeholder="e.g. A. Patil" /></label>
+          <label>{L.ward}
+            <select value={code} onChange={(e) => setCode(e.target.value)}>
+              {facts.wards.map((x) => <option key={x.code} value={x.code}>{x.code}: {x.name}</option>)}
+            </select>
+          </label>
+          <div className="wd-lang" role="group" aria-label="Language">
+            <button aria-pressed={lang === 'en'} onClick={() => setLang('en')}>English</button>
+            <button aria-pressed={lang === 'mr'} onClick={() => setLang('mr')}>मराठी</button>
+          </div>
+          <p className="wd-note">{L.demoNote}</p>
+        </div>
+        <div className="wd-roles">
+          <p className="wd-kicker">{L.as}</p>
           {ROLES.map((r) => (
-            <li key={r}>
-              <button className="wd-btn" onClick={() => { const o = { name: loginName.trim(), ward: code, role: r }; setTab(0); localStorage.setItem('wd-officer', JSON.stringify(o)); setOfficer(o) }}>{L.roles[r]}</button>
-              <small> {L.roleNote[r]}</small>
-            </li>
+            <button key={r} className="wd-btn wd-role" data-role={r} onClick={() => { const o = { name: loginName.trim(), ward: code, role: r }; setTab(0); localStorage.setItem('wd-officer', JSON.stringify(o)); setOfficer(o) }}>
+              <span className="wd-role-icon" aria-hidden="true">{L.icon[r]}</span>
+              <span className="wd-role-text"><b>{L.roles[r]}</b><small>{L.roleNote[r]}</small></span>
+              <span className="wd-role-go" aria-hidden="true">→</span>
+            </button>
           ))}
-        </ul>
-        <p className="wd-note">{L.demoNote}</p>
+        </div>
       </div>
     )
   }
@@ -270,21 +283,24 @@ export default function WardDesk() {
   const informed = acts.filter((a) => a.citizen && (approved(status(a)) || status(a)?.startsWith('rep:fixed'))).length
 
   const head = (
-    <>
+    <header className="wd-bar" data-role={role}>
       <div className="wd-who">
         <span>{L.hello} <b>{officer.name || L.roles[role]}</b>{officer.name ? ` · ${L.roles[role]}` : ''}{role !== 'commissioner' ? ` · ${w.code}` : ''}</span>
         <button onClick={() => { if (confirmReset()) { setDone({}); setLog([]); setEod({}) } }}>{L.reset}</button>
         <button onClick={() => { localStorage.removeItem('wd-officer'); setOfficer(null); setLoginName('') }}>{L.signout}</button>
       </div>
       <div className="wd-top">
-        <b className="wd-wardname">{role === 'commissioner' ? L.cityH : `${w.code}: ${w.name}`}</b>
+        <div>
+          <span className="wd-rolechip">{L.icon[role]} {L.roles[role]}</span>
+          <h1 className="wd-wardname">{role === 'commissioner' ? L.cityH : <><em>{w.code}</em> {w.name}</>}</h1>
+        </div>
         <div className="wd-lang" role="group" aria-label="Language">
           <button aria-pressed={lang === 'en'} onClick={() => setLang('en')}>English</button>
           <button aria-pressed={lang === 'mr'} onClick={() => setLang('mr')}>मराठी</button>
         </div>
       </div>
       <p className="wd-note">{t.synthetic} · {t.asOf}</p>
-    </>
+    </header>
   )
 
   if (role === 'engineer') {
@@ -383,21 +399,17 @@ export default function WardDesk() {
         if (day) outbox.push({ ch: 'email', to: L.eodTo, subject: L.eodSubj(day.decided, day.of, day.carried, inr(lang, day.held)), at: day.at })
         if (decided === acts.length && acts.length && corp?.qc1) outbox.push({ ch: 'email', to: `${L.corpTo} ${w.code}`, subject: `${L.corpSubj}: ${corp[lang].slice(0, 90)}…`, at: '' })
         return (
-          <section>
+          <section className="wd-today">
+           <div className="wd-main">
             {a?.brief?.morning.qc1 && <div className="wd-summary"><b>{L.summary}</b><AgentText l={a.brief.morning} lang={lang} /></div>}
-            <ol className="wd-steps">
-              <li className={decided < acts.length ? 'on' : 'done'}>① {L.steps[0]}</li>
-              <li className={decided < acts.length ? 'on' : 'done'}>② {L.steps[1]} · {acts.length - decided} {L.pending}</li>
-              <li className={outbox.length ? 'done' : ''}>③ {L.steps[2]} · {outbox.length}</li>
-            </ol>
-            <div className="wd-progress"><div className="bar"><span style={{ width: `${acts.length ? (decided / acts.length) * 100 : 0}%` }} /></div>
-              <small><b>{decided}/{acts.length}</b> {L.progress} · <b>{inr(lang, claimed)}</b> {L.held} · <b>{informed}</b> {L.citizens}</small></div>
+            <h2>{t.today}</h2>
             <ol className="wd-cards">
               {texts.map((x, i) => {
                 const act = acts[i]
                 const st = act && status(act)
                 return (
                   <li key={x} className={st ? 'done' : ''}>
+                    {act && (() => { const k = !st ? 'todo' : st === 'asg' || st.startsWith('rep:notfixed') ? 'wip' : 'done'; return <span className={`wd-status ${k}`}>{L.stTag[k]}</span> })()}
                     <p>{x}</p>
                     {act && HAZARD.includes(act.kind) && !approved(st) && st !== 'ok' && !st?.startsWith('rep:fixed') && (
                       <small className="wd-tag warn">⏱ {L.due24}{act.since ? ` · ${L.waiting(Math.floor((AS_OF - Date.parse(act.since.replace(' ', 'T'))) / 864e5))}` : ''}</small>
@@ -423,15 +435,15 @@ export default function WardDesk() {
                 )
               })}
             </ol>
-            <h2>{L.outbox}</h2>
-            {outbox.length === 0 ? <p className="wd-note">{L.empty}</p> : (
-              <ul className="wd-list wd-outbox">
-                {outbox.map((m, i) => (
-                  <li key={i}><div className="wd-row"><span className="wd-tag">{m.ch === 'sms' ? '📱 SMS' : '✉ Email'}</span><b>{m.to}</b><span className="wd-amt">{m.at}</span></div><small>{m.subject}</small></li>
-                ))}
-              </ul>
-            )}
-            {decided < acts.length && <p className="wd-note">{L.corpWait}</p>}
+           </div>
+           <aside className="wd-side">
+            <div className="wd-progress"><div className="wd-big"><b>{decided}</b><span>/{acts.length}</span></div><div className="bar"><span style={{ width: `${acts.length ? (decided / acts.length) * 100 : 0}%` }} /></div>
+              <small><b>{decided}/{acts.length}</b> {L.progress} · <b>{inr(lang, claimed)}</b> {L.held} · <b>{informed}</b> {L.citizens}</small></div>
+            <ol className="wd-steps">
+              <li className={decided < acts.length ? 'on' : 'done'}>① {L.steps[0]}</li>
+              <li className={decided < acts.length ? 'on' : 'done'}>② {L.steps[1]} · {acts.length - decided} {L.pending}</li>
+              <li className={outbox.length ? 'done' : ''}>③ {L.steps[2]} · {outbox.length}</li>
+            </ol>
             <h2>{L.eodH}</h2>
             <div className="wd-summary">
               <small><b>{decided}/{acts.length}</b> {L.eodDone} · <b>{carry.length}</b> {L.eodCarry} · <b>{inr(lang, claimed)}</b> {L.held} · <b>{informed}</b> {L.citizens}</small>
@@ -444,6 +456,15 @@ export default function WardDesk() {
                 }}>{L.eodSend}</button></div>
               )}
             </div>
+            <h2>{L.outbox}</h2>
+            {outbox.length === 0 ? <p className="wd-note">{L.empty}</p> : (
+              <ul className="wd-list wd-outbox">
+                {outbox.map((m, i) => (
+                  <li key={i}><div className="wd-row"><span className="wd-tag">{m.ch === 'sms' ? '📱 SMS' : '✉ Email'}</span><b>{m.to}</b><span className="wd-amt">{m.at}</span></div><small>{m.subject}</small></li>
+                ))}
+              </ul>
+            )}
+            {decided < acts.length && <p className="wd-note">{L.corpWait}</p>}
             <h2>{L.logH}</h2>
             {log.filter((e) => e.ward === w.code).length === 0 ? <p className="wd-note">{L.logEmpty}</p> : (
               <ul className="wd-list wd-log">
@@ -453,6 +474,7 @@ export default function WardDesk() {
               </ul>
             )}
             <p className="wd-note">{L.simNote}</p>
+           </aside>
           </section>
         )
       })()}

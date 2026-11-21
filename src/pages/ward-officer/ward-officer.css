@@ -97,3 +97,123 @@ ol.wd-list { list-style: decimal; padding-left: 20px; }
 .wd-why { width: 100%; max-width: 420px; margin: 6px 0 0; padding: 6px 8px; font: inherit; font-size: 0.85rem; color: inherit; background: transparent; border: 1px solid rgba(127,127,127,0.35); border-radius: 6px; }
 .wd-tag.warn { display: block; width: fit-content; margin-top: 4px; }
 .wd-log li { padding: 6px 10px; }
+
+/* ===== Redesign 21 Nov: "municipal ledger desk". Own palette, scoped to .wd. ===== */
+.wd {
+  --bg: #0e1622; --surface: #142031; --surface-2: #1a283c; --border: #24344b;
+  --text: #9fadc0; --text-h: #f1ede4; --accent: #e6a540; --accent-ink: #1b1306; --accent-bg: rgba(230, 165, 64, 0.11);
+  --muted-bg: #172436; --bad: #f2867a; --warn: #f0c36a; --ok: #7fc8a9;
+  --shadow: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 12px 32px -16px rgba(3, 8, 16, 0.9);
+  font-family: 'Segoe UI Variable Text', 'Segoe UI', system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  background:
+    radial-gradient(1200px 500px at 85% -10%, rgba(230, 165, 64, 0.07), transparent 60%),
+    radial-gradient(900px 400px at -10% 0%, rgba(90, 140, 200, 0.08), transparent 60%), var(--bg);
+  border: 1px solid var(--border); border-radius: 22px; padding: 22px clamp(14px, 3vw, 32px) 32px;
+  max-width: 1280px; box-shadow: var(--shadow);
+}
+.wd h2 { font-size: 0.78rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text); margin: 22px 0 10px; }
+.wd .wd-note { background: transparent; border: 1px dashed var(--border); color: var(--text); }
+.wd button { transition: background-color 0.2s, border-color 0.2s, color 0.2s, transform 0.12s; }
+.wd button:active { transform: scale(0.98); }
+.wd :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Buttons */
+.wd .wd-btn { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; border-radius: 10px; }
+.wd .wd-btn:hover { background: #f0b65b; }
+.wd .wd-btn.ghost { background: transparent; color: var(--text-h); border-color: var(--border); font-weight: 500; }
+.wd .wd-btn.ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Sign-in */
+.wd.wd-login { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: clamp(20px, 4vw, 56px); max-width: 1080px; padding: clamp(22px, 4vw, 48px); align-items: start; }
+.wd-login-intro { display: flex; flex-direction: column; gap: 14px; }
+.wd-kicker { margin: 0; font-size: 0.75rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+.wd-display { margin: 0; font-family: Georgia, 'Times New Roman', serif; font-weight: 400; font-size: clamp(2rem, 4vw, 3rem); line-height: 1.05; letter-spacing: -0.02em; color: var(--text-h); text-wrap: balance; }
+.wd-lede { margin: 0 0 6px; max-width: 42ch; line-height: 1.55; }
+.wd-login label { color: var(--text); font-size: 0.8rem; }
+.wd-login input, .wd-login select { background: var(--surface); border-color: var(--border); border-radius: 10px; }
+.wd-login .wd-lang { align-self: flex-start; }
+.wd-roles { display: flex; flex-direction: column; gap: 12px; }
+.wd .wd-role { display: grid; grid-template-columns: 52px 1fr auto; align-items: center; gap: 14px; text-align: left; padding: 18px; min-height: 92px;
+  background: var(--surface); color: var(--text-h); border: 1px solid var(--border); border-radius: 16px; box-shadow: var(--shadow); }
+.wd .wd-role:hover { background: var(--surface-2); border-color: var(--accent); }
+.wd-role-icon { width: 52px; height: 52px; border-radius: 14px; display: grid; place-items: center; font-size: 1.3rem; background: var(--accent-bg); color: var(--accent); }
+.wd-role[data-role='engineer'] .wd-role-icon { background: rgba(127, 200, 169, 0.12); color: var(--ok); }
+.wd-role[data-role='commissioner'] .wd-role-icon { background: rgba(140, 170, 220, 0.14); color: #a9c0e6; }
+.wd-role-text { display: flex; flex-direction: column; gap: 4px; }
+.wd-role-text b { font-size: 1.05rem; font-weight: 600; }
+.wd-role-text small { color: var(--text); font-weight: 400; line-height: 1.4; }
+.wd-role-go { font-size: 1.3rem; color: var(--text); transition: transform 0.2s, color 0.2s; }
+.wd-role:hover .wd-role-go { transform: translateX(4px); color: var(--accent); }
+
+/* Header bar */
+.wd-bar { margin: -4px 0 6px; }
+.wd .wd-who { justify-content: flex-end; color: var(--text); }
+.wd .wd-who button, .wd .wd-link { border-color: var(--border); color: var(--text); }
+.wd .wd-who button:hover, .wd .wd-link:hover { border-color: var(--accent); color: var(--accent); }
+.wd-bar .wd-top { align-items: flex-end; padding: 4px 0 2px; }
+.wd-rolechip { display: inline-block; font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; color: var(--accent); padding: 4px 10px; border-radius: 6px; background: var(--accent-bg); }
+.wd-bar[data-role='engineer'] .wd-rolechip { color: var(--ok); background: rgba(127, 200, 169, 0.12); }
+.wd-bar[data-role='commissioner'] .wd-rolechip { color: #a9c0e6; background: rgba(140, 170, 220, 0.14); }
+.wd .wd-wardname { display: block; margin: 8px 0 0; font-family: Georgia, 'Times New Roman', serif; font-weight: 400; font-size: clamp(1.6rem, 3.2vw, 2.4rem); line-height: 1.1; letter-spacing: -0.015em; color: var(--text-h); }
+.wd .wd-wardname em { font-style: normal; color: var(--accent); }
+.wd .wd-lang { border-color: var(--border); }
+.wd .wd-lang button { background: transparent; color: var(--text); }
+.wd .wd-lang button[aria-pressed='true'] { background: var(--accent); color: var(--accent-ink); }
+
+/* Stats: payments to check is the hero */
+.wd .wd-stats { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; }
+.wd .wd-stats > div { background: var(--surface); border-color: var(--border); border-radius: 14px; padding: 14px 16px; }
+.wd .wd-stats span { font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase; }
+.wd .wd-stats b { font-size: 1.5rem; font-weight: 600; letter-spacing: -0.01em; }
+.wd .wd-stats .hl { grid-column: span 2; order: -1; background: linear-gradient(135deg, rgba(230, 165, 64, 0.16), rgba(230, 165, 64, 0.04)); border-color: rgba(230, 165, 64, 0.5); }
+.wd .wd-stats .hl b { font-size: 2.1rem; color: var(--accent); }
+@media (max-width: 760px) { .wd .wd-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } .wd.wd-login { grid-template-columns: 1fr; } }
+
+/* Tabs: underline, not pills */
+.wd .wd-tabs { gap: 2px; border-bottom: 1px solid var(--border); margin-top: 18px; padding-bottom: 0; }
+.wd .wd-tabs button { border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: transparent; color: var(--text); padding: 10px 14px; }
+.wd .wd-tabs button:hover { color: var(--text-h); }
+.wd .wd-tabs button[aria-selected='true'] { color: var(--text-h); border-bottom-color: var(--accent); background: transparent; }
+
+/* Today: queue + side panel */
+.wd-today { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 24px; align-items: start; margin-top: 8px; }
+.wd-side { position: sticky; top: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 18px; box-shadow: var(--shadow); max-height: calc(100dvh - 24px); overflow: auto; }
+@media (max-width: 980px) { .wd-today { grid-template-columns: 1fr; } .wd-side { position: static; max-height: none; } }
+.wd .wd-summary { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; }
+.wd .wd-summary > b { font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
+.wd .wd-agent { background: transparent; border-left-color: var(--accent); color: var(--text-h); line-height: 1.55; }
+.wd-big { display: flex; align-items: baseline; gap: 2px; font-family: Georgia, serif; color: var(--text-h); }
+.wd-big b { font-size: 3.2rem; font-weight: 400; line-height: 1; }
+.wd-big span { font-size: 1.4rem; color: var(--text); }
+.wd .wd-progress .bar { height: 6px; margin: 10px 0 8px; background: var(--muted-bg); }
+.wd .wd-steps li { border-color: var(--border); font-size: 0.78rem; }
+
+/* Decision cards */
+.wd .wd-cards li { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 18px 18px 16px 64px; margin-bottom: 12px; box-shadow: var(--shadow); transition: border-color 0.2s; }
+.wd .wd-cards li:hover { border-color: #33465f; }
+.wd .wd-cards li::before { left: 18px; top: 18px; width: 30px; height: 30px; border-radius: 9px; background: var(--accent-bg); color: var(--accent); font-family: Georgia, serif; font-size: 1rem; font-weight: 400; }
+.wd .wd-cards li.done { opacity: 1; border-color: var(--border); background: var(--surface-2); }
+.wd .wd-cards li.done p { color: var(--text); }
+.wd .wd-cards li.done::before { background: rgba(127, 200, 169, 0.14); color: var(--ok); }
+.wd .wd-cards p { font-size: 1rem; line-height: 1.55; max-width: 70ch; }
+.wd-status { float: right; margin: -4px -4px 6px 12px; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.04em; padding: 3px 8px; border-radius: 5px; border: 1px solid var(--border); color: var(--text); }
+.wd-status.wip { color: var(--warn); border-color: rgba(240, 195, 106, 0.45); background: rgba(240, 195, 106, 0.08); }
+.wd-status.done { color: var(--ok); border-color: rgba(127, 200, 169, 0.45); background: rgba(127, 200, 169, 0.08); }
+.wd .wd-tag { background: var(--muted-bg); color: var(--text); border-radius: 5px; }
+.wd .wd-tag.warn { color: var(--warn); background: rgba(240, 195, 106, 0.08); margin-top: 10px; }
+.wd .wd-why { max-width: 460px; margin-top: 12px; background: var(--bg); border-color: var(--border); border-radius: 10px; padding: 9px 12px; color: var(--text-h); }
+.wd .wd-act { margin-top: 12px; }
+.wd .wd-qc.ok { color: var(--ok); border-color: rgba(127, 200, 169, 0.5); }
+.wd .wd-cit { color: var(--ok); }
+
+/* Lists, outbox, log, tables */
+.wd .wd-list li { background: var(--surface-2); border-color: var(--border); border-radius: 12px; }
+.wd-side .wd-list li { background: var(--bg); }
+.wd-log li small { line-height: 1.5; }
+.wd .wd-table th { font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text); font-weight: 600; }
+.wd .wd-table td { color: var(--text-h); padding: 10px 8px; }
+.wd .wd-table tbody tr:hover td { background: var(--surface); }
+.wd .wd-tabs { scrollbar-width: none; }
+.wd .wd-tabs::-webkit-scrollbar { display: none; }
