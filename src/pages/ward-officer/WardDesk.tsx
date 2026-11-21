@@ -5,7 +5,7 @@ import './ward-officer.css'
 
 const T = {
   en: {
-    pick: 'Your ward', budget: 'Budget', spent: 'Spent', shp: 'Should not have come from BMC', crews: 'Crews / day', flood: 'Flood risk',
+    pick: 'Your ward', budget: 'Budget', spent: 'Spent', shp: 'Payments to check', reworded: 'Reworded for fairness', outOf: 'out of 1', badgeNote: 'Every AI line passed the evidence check (lines that failed are hidden). Tags appear only when the fairness check reworded a line or added a caveat; hover to see why.', kinds: { road: 'pothole / road', water: 'waterlogging', manhole: 'manhole', other: 'other' }, crews: 'Crews / day', flood: 'Flood risk',
     tabs: ['Today', 'Who should have paid', 'Fixed or just closed?', 'Lost complaints', 'Next rupee', 'Contractors', 'Why this'],
     today: "Today's 5 actions", asOf: 'Data as of 10 Oct 2025 (event dataset)', verify: 'Verify first', copyAll: 'Copy for WhatsApp',
     repeatsH: 'Marked resolved, then a new complaint at the same spot (within 50 m, 1 to 30 days later)',
@@ -19,7 +19,7 @@ const T = {
     cols: ['Contractor', 'Jobs', 'Failed in 30 days', 'Missed deadline', 'Cost vs rate', 'Heavy-rain jobs'],
   },
   mr: {
-    pick: 'तुमचा वॉर्ड', budget: 'बजेट', spent: 'खर्च', shp: 'BMC ने भरायला नको होते', crews: 'रोजची पथके', flood: 'पूर धोका',
+    pick: 'तुमचा वॉर्ड', budget: 'बजेट', spent: 'खर्च', shp: 'तपासायची देयके', reworded: 'न्याय्यतेसाठी पुन्हा लिहिले', outOf: '1 पैकी', badgeNote: 'प्रत्येक AI ओळ पुरावा तपासणीत पास झाली (अपयशी ओळी लपवल्या). न्याय्यता तपासणीने ओळ बदलली किंवा इशारा जोडला तरच टॅग दिसतो.', kinds: { road: 'खड्डा / रस्ता', water: 'पाणी साचणे', manhole: 'मॅनहोल', other: 'इतर' }, crews: 'रोजची पथके', flood: 'पूर धोका',
     tabs: ['आज', 'कोणी भरायला हवे होते', 'खरंच दुरुस्त?', 'हरवलेल्या तक्रारी', 'पुढचा रुपया', 'कंत्राटदार', 'का?'],
     today: 'आजची 5 कामे', asOf: 'डेटा 10 ऑक्टो 2025 पर्यंतचा (इव्हेंट डेटासेट)', verify: 'आधी तपासा', copyAll: 'WhatsApp साठी कॉपी',
     repeatsH: 'सोडवली म्हणून बंद, नंतर त्याच जागी नवी तक्रार (50 मी. आत, 1 ते 30 दिवसांत)',
@@ -59,10 +59,19 @@ function todayActions(w: Ward, lang: Lang): string[] {
     : `Refile ${lost.id} as a pothole (photo shows one, filed as "${lost.category}").`)
   const road = w.nextRupee[0]
   if (road) out.push(mr
-    ? `पथक ${road.name} (${road.road}) वर पाठवा: ${road.method}, अंदाजे ${road.underWarranty ? '₹0' : inr(lang, road.estCost)}.`
+    ? `पथक ${road.name} (${road.road}) वर पाठवा: ${method(lang, road.method)}, अंदाजे ${road.underWarranty ? '₹0' : inr(lang, road.estCost)}.`
     : `Send a crew to ${road.name} (${road.road}): ${road.method}, about ${road.underWarranty ? '₹0' : inr(lang, road.estCost)}.`)
   return out.slice(0, 5)
 }
+
+const METHOD_MR: Record<string, string> = {
+  'Cold mix patch': 'कोल्ड मिक्स पॅच', 'Hot mix patch': 'हॉट मिक्स पॅच', 'Mastic asphalt': 'मॅस्टिक अस्फाल्ट',
+  'Paver blocks relaid': 'पेव्हर ब्लॉक पुन्हा बसवले', 'Dewatering pump deployed': 'पाणी उपसा पंप', 'Drain desilting': 'नाले गाळ काढणे',
+  'Pump + debris removal': 'पंप + कचरा काढणे', 'Manhole cover replaced + grating': 'मॅनहोल झाकण + जाळी बदलली',
+  'Excavation, pipeline repair, PQC patch': 'खोदकाम, पाइपलाइन दुरुस्ती, PQC पॅच', 'Desilting and garbage removal': 'गाळ व कचरा काढणे',
+  'Call original contractor (under warranty)': 'मूळ कंत्राटदाराला बोलवा (हमी कालावधी)',
+}
+const method = (lang: Lang, m: string) => (lang === 'mr' ? METHOD_MR[m] ?? m : m)
 
 const pct = (x: number) => `${Math.round(x * 100)}%`
 const base = import.meta.env.BASE_URL
@@ -71,12 +80,8 @@ function Badges({ l, lang }: { l: Line; lang: Lang }) {
   const t = T[lang]
   return (
     <span className="wd-badges">
-      <span className="wd-qc ok" title="QC1">✓ {t.qc1}</span>
-      {l.qc2 === 'needs context' ? (
-        <span className="wd-qc warn" title={l.qc2Reason}>⚠ {t.ctx}</span>
-      ) : (
-        <span className="wd-qc ok" title={l.qc2Reason ?? 'QC2'}>✓ {t.qc2}{l.qc2 === 'reworded' ? ' *' : ''}</span>
-      )}
+      {l.qc2 === 'needs context' && <span className="wd-qc warn" title={l.qc2Reason}>⚠ {t.ctx}</span>}
+      {l.qc2 === 'reworded' && <span className="wd-qc ok" title={l.qc2Reason}>✎ {t.reworded}</span>}
     </span>
   )
 }
@@ -152,7 +157,7 @@ export default function WardDesk() {
         <div className={left < 0 ? 'bad' : ''}><span>{t.spent}</span><b>{inr(lang, w.spent)}</b><small>{pct(w.spent / w.budget)}</small></div>
         <div className="hl"><span>{t.shp}</span><b>{inr(lang, w.shouldHavePaid.total)}</b><small>{w.shouldHavePaid.workOrders} WO</small></div>
         <div><span>{t.crews}</span><b>{w.crews}</b></div>
-        <div className={w.lowLying >= 0.75 ? 'bad' : ''}><span>{t.flood}</span><b>{w.lowLying}</b></div>
+        <div className={w.lowLying >= 0.75 ? 'bad' : ''}><span>{t.flood}</span><b>{w.lowLying}</b><small>{t.outOf}</small></div>
       </div>
 
       <nav className="wd-tabs" role="tablist">
@@ -161,6 +166,7 @@ export default function WardDesk() {
         ))}
       </nav>
 
+      {a && <p className="wd-note">{t.badgeNote}</p>}
       {!a && <p className="wd-note">{t.noAgent}</p>}
       {held > 0 && <p className="wd-note">{held} {t.held}</p>}
 
@@ -187,8 +193,8 @@ export default function WardDesk() {
           <ul className="wd-list">
             {w.repeats.examples.map((r) => (
               <li key={r.closed + r.again}>
-                <div className="wd-row"><b>{r.closed} → {r.again}</b><span className="wd-tag">{r.days} d</span></div>
-                <small>{r.locality} · closed {r.closedAt} · new {r.againAt}</small>
+                <div className="wd-row"><b>{r.closed} → {r.again}</b><span className="wd-tag">{t.kinds[r.kind]}</span><span className="wd-tag">{r.days} d · {r.metres} m</span></div>
+                <small>{r.locality} · {r.closedAt.slice(0, 10)} → {r.againAt.slice(0, 10)}</small>
                 <p className="wd-quote">“{r.text}”</p>
               </li>
             ))}
@@ -219,7 +225,7 @@ export default function WardDesk() {
                     {fs.map((x) => <span key={x.type} className={`wd-tag ${x.type}`}>{t.types[x.type]} · {inr(lang, x.amount)}</span>)}
                     <span className="wd-amt">{inr(lang, amount)}</span>
                   </div>
-                  <small>{f.roadName} ({f.road}) · {f.contractor} · {f.method} · {f.date}{f.heavyRainWeek ? ' · 🌧' : ''}</small>
+                  <small>{f.roadName} ({f.road}) · {f.contractor} · {method(lang, f.method)} · {f.date}{f.heavyRainWeek ? ' · 🌧' : ''}</small>
                   <AgentText l={lineFor(a?.auditor, f.wo)} lang={lang} />
                 </li>
               )
@@ -273,7 +279,7 @@ export default function WardDesk() {
                   <span className="wd-amt">{r.underWarranty ? '₹0' : inr(lang, r.estCost)}</span>
                 </div>
                 <small>
-                  {r.method} · {r.reopens}× reopened · {r.accidents} accidents{r.fatal ? ` (${r.fatal} fatal)` : ''}
+                  {method(lang, r.method)} · {r.reopens}× reopened · {r.accidents} accidents{r.fatal ? ` (${r.fatal} fatal)` : ''}
                   {r.hospitals.length ? ` · 🏥 ${r.hospitals.join(', ')}` : ''}{r.floodSpots.length ? ` · 🌊 ${r.floodSpots.join(', ')}` : ''}
                   {r.busRoute ? ' · 🚌' : ''} · {inr(lang, r.spent)} spent so far
                 </small>

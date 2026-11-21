@@ -66,7 +66,7 @@ export type Ward = {
   slaMissRate: number
   shouldHavePaid: { total: number; workOrders: number; byType: Record<string, { count: number; amount: number }> }
   flags: Flag[]
-  repeats: { count: number; examples: { closed: string; closedAt: string; again: string; againAt: string; locality: string; text: string; days: number }[] }
+  repeats: { count: number; examples: { closed: string; closedAt: string; again: string; againAt: string; kind: "road" | "water" | "manhole" | "other"; metres: number; locality: string; text: string; days: number }[] }
   complaints: {
     total: number
     open: number
